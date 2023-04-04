@@ -4,4 +4,6 @@ workloadgenerator.dSYM
 main
 workloadgenerator
 
+workload/*
+
 .DS_Store
