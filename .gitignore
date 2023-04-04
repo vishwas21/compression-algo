@@ -3,3 +3,5 @@ old_code
 workloadgenerator.dSYM
 main
 workloadgenerator
+
+.DS_Store
