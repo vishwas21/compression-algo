@@ -6,6 +6,16 @@
 #include <algorithm>
 #include <functional>
 #include <chrono>
+#include <string>
+#include <unordered_map>
+
+using namespace std;
+
+
+struct Match {
+    int offset;
+    int length;
+};
 
 
 void print(std::vector <int> const &a) {
@@ -61,6 +71,89 @@ void newRLEncoder(std::vector <int> const &input_sequence)  {
 
 }
 
+vector<Match> compress(const vector<int>& input) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+     const int window_size = 256;
+    const int lookahead_buffer_size = 16;
+    std::vector<Match> matches;
+    std::unordered_map<std::vector<int>::const_iterator, std::vector<int>::const_iterator> dictionary;
+    auto dict_end = dictionary.end();
+    auto pos = input.begin();
+    
+    while (pos != input.end()) {
+        Match best_match = {0, 0};
+        const int max_offset = std::min<int>(window_size, std::distance(input.begin(), pos));
+        const auto dict_begin = std::max(input.begin(), pos - max_offset);
+        const auto dict_range = std::make_pair(dict_begin, pos);
+        
+        for (int offset = 1; offset <= max_offset; ++offset) {
+            const auto search_begin = std::max(dict_begin, pos - offset);
+            const auto search_end = std::min(input.end(), pos + lookahead_buffer_size);
+            const auto substring = std::vector<int>(pos, search_end);
+            
+            auto dict_match = dictionary.find(search_begin);
+            while (dict_match != dict_end && dict_match->first < search_end) {
+                int length = 0;
+                const auto dict_pos = dict_match->first;
+                const auto dict_val = dict_match->second;
+                
+                while (pos + length != input.end() && dict_pos + length != dict_val) {
+                    if (*(pos + length) != *(dict_pos + length)) {
+                        break;
+                    }
+                    ++length;
+                }
+                
+                if (length > best_match.length) {
+                    best_match = {std::distance(dict_pos, pos), length};
+                }
+                
+                ++dict_match;
+            }
+            
+            if (pos + best_match.length >= search_end) {
+                break;
+            }
+        }
+        
+        matches.push_back(best_match);
+        const auto new_pos = pos + best_match.length + 1;
+        dictionary[std::make_pair(pos, new_pos)] = dict_range;
+        pos = new_pos;
+    }
+    
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+    std::cout << std::endl << std::endl;
+    std::cout << "LZ new Encoding Algorithm: " << std::endl;
+    std::cout << "Length : " << matches.size() << std::endl;
+    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * matches.size())) << std::endl;
+    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+
+    return matches;
+}
+
+int LZCompress(std::vector <int> const &input_sequence) {
+    vector<Match> tokens = compress(input_sequence);
+    // cout << "Compressed data:" << endl;
+    // for (Token token : tokens) {
+    //     cout << "(" << token.offset << "," << token.length << "," << token.next << ")" << endl;
+    // }
+    cout << endl;
+    return 0;
+}
+
+namespace std {
+    template<>
+    struct hash<std::__wrap_iter<const int*> > {
+        size_t operator()(std::__wrap_iter<const int*> const& iter) const noexcept {
+            return std::hash<const int*>{}(&*iter);
+        };
+    };
+}
+
+
 int main(int argc, char **argv)
 {
   std::string input_file;
@@ -96,5 +189,6 @@ int main(int argc, char **argv)
 
   
   // Compression Algorithm calls
-  newRLEncoder(data);
+  // newRLEncoder(data);
+  LZCompress(data);
 }
