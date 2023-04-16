@@ -147,6 +147,6 @@ int main(int argc, char **argv)
 
   
   // Compression Algorithm calls
-  newRLEncoder(data);
-//   LZCompress(data);
+  // newRLEncoder(data);
+  LZCompress(data);
 }
