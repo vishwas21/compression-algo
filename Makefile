@@ -6,6 +6,9 @@ main: main.cpp
 workloadgenerator: workload_generator.cpp
 	g++ -g -std=c++0x -o $@ $^
 
+zstd: ZStandard.cpp
+	g++ -g -std=c++11 -o $@ $^
+
 clear: 
 	rm main
 	rm workloadgenerator
