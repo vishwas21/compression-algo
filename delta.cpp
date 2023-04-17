@@ -9,8 +9,6 @@
 #include <string>
 #include <unordered_map>
 
-using namespace std;
-
 double measure_compression_ratio(const std::vector<int>& input_sequence, const std::vector<int>& compressed_sequence) {
     double input_size = input_sequence.size() * sizeof(int);
     double output_size = compressed_sequence.size() * sizeof(int);
@@ -18,50 +16,34 @@ double measure_compression_ratio(const std::vector<int>& input_sequence, const s
 }
 
 void print(std::vector <int> const &a) {
-   for(int i=104770; i < 104970; i++)
+   for(int i=0; i < 1000; i++)
    std::cout << a.at(i) << ' ';
 }
 
-// Function to perform run-length encoding
-vector<pair<int, int> > rle(vector<int>& arr) {
+void delta_compress(std::vector<int>& data) {
     auto start_time = std::chrono::high_resolution_clock::now();
-    int n = arr.size();
 
-    vector<pair<int, int> > res;
-
-    for (int i = 0; i < n; i++) {
-        int count = 1;
-        while (i < n - 1 && arr[i] == arr[i+1]) {
-            count++;
-            i++;
-        }
-        res.push_back({ arr[i], count});
+    for (int i = data.size() - 1; i > 0; i--) {
+        data[i] -= data[i - 1];
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
 
     std::cout << std::endl << std::endl;
-    std::cout << "Run Length Encoding Algorithm: " << std::endl;
-    std::cout << "Length : " << res.size() << std::endl;
-    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * res.size())) << std::endl;
+    std::cout << "Delta Algorithm: " << std::endl;
+    std::cout << "Length : " << data.size() << std::endl;
+    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
     std::cout << "Time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
-
-    return res;
 }
 
-// Function to perform run-length decoding
-vector<int> rld(vector<pair<int, int> >& arr) {
-    vector<int> res;
-    for (auto p : arr) {
-        for (int i = 0; i < p.second; i++) {
-            res.push_back(p.first);
-        }
+void delta_decompress(std::vector<int>& data) {
+    for (int i = 1; i < data.size(); i++) {
+        data[i] += data[i - 1];
     }
-    return res;
 }
 
 // Function to calculate accuracy, precision, and recall of RLE
-void calculateMetrics(vector<int>& original, vector<int>& decoded) {
+void calculateMetrics(std::vector<int>& original, std::vector<int>& decoded) {
     int n = original.size();
     int m = decoded.size();
 
@@ -90,13 +72,13 @@ void calculateMetrics(vector<int>& original, vector<int>& decoded) {
     double precision = 100.0 * (double)TP / (TP + FP);
     double recall = 100.0 * (double)TP / (TP + FN);
 
-    cout << "Accuracy: " << accuracy << "%" << endl;
-    cout << "Precision: " << precision << "%" << endl;
-    cout << "Recall: " << recall << "%" << endl;
+    std::cout << "Accuracy: " << accuracy << "%" << std::endl;
+    std::cout << "Precision: " << precision << "%" << std::endl;
+    std::cout << "Recall: " << recall << "%" << std::endl;
 }
 
-int main(int argc, char **argv) {
-    // Example usage
+
+int main() {
     std::string input_file;
 
     input_file = "./workloadgen/load/workloadFive.txt";
@@ -115,17 +97,21 @@ int main(int argc, char **argv) {
     std::cout << "Input Sequence : " << std::endl;
     std::cout << "Length : " << data.size() << std::endl;
     std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
-    vector<pair<int, int> > encoded = rle(data);
-    cout << "Encoded: ";
-    for (auto p : encoded) {
-        cout << "(" << p.first << ", " << p.second << ") ";
-    }
-    cout << endl;
 
-    vector<int> decoded = rld(encoded);
+    std::vector<int> original(data);
 
+    // Compress the data
+    delta_compress(data);
+    // std::cout << "Compressed data: ";
+    // for (int val : data) {
+    //     std::cout << val << " ";
+    // }
+    // std::cout << std::endl;
 
-    calculateMetrics(data, decoded);
+    // Decompress the data
+    delta_decompress(data);
 
+    calculateMetrics(original, data);
+    
     return 0;
 }

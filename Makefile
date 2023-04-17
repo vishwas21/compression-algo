@@ -12,6 +12,17 @@ zstd: ZStandard.cpp
 rle: rle.cpp
 	g++ -g -std=c++11 -o $@ $^
 
+snappy: snappy.cpp
+	g++ -g -std=c++11 -o $@ $^
+
+delta: delta.cpp
+	g++ -g -std=c++11 -o $@ $^
+
 clear: 
 	rm main
 	rm workloadgenerator
+	rm delta
+	rm snappy
+	rm rle
+	rm zstd
+	
