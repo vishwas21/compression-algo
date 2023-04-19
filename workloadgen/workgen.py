@@ -149,27 +149,39 @@ def main(n, loadlen):
     for i in range(1, n + 1):
         uniqueNumbers.append(i)
 
-    total = 1 
-    avg = total / n
-    ratio = 0
-    global ratios
+    ratios = []
+    total = 0
 
     for i in range(n - 1):
-        deviation = random.uniform(-0.1, 0.1)
-        ratio = avg * (1 + deviation)
+        ratio = random.uniform(0, 1 - total)
         ratios.append(ratio)
+        total += ratio
 
+    # Calculate the last ratio value to ensure the sum is equal to 0.5
     ratios.append(1 - sum(ratios))
-    sum_ratios = sum(ratios)
-    ratios = [round(ratio / sum_ratios, 5) for ratio in ratios]
 
-    generateWorkloadOne(loadlen)
-    generateWorkloadTwo(loadlen)
-    generateWorkloadThree(loadlen)
-    generateWorkloadFour(loadlen)
-    generateWorkloadFive(loadlen)
+    # Check if the last value is negative and adjust the previous value if necessary
+    if ratios[-1] < 0:
+        ratios[-2] += ratios[-1]
+        ratios[-1] = 0
+
+    # Round off each value to 7 decimal places and ensure that it's not equal to 0.0
+    ratios = [round(ratio, 7) if round(ratio, 7) != 0 else 0.0000001 for ratio in ratios]
+
+
+    # ratios = [round(ratio, 5) for ratio in ratios]
+    # ratios.append(1 - sum(ratios))
+    sum_ratios = sum(ratios)
+
+    print(ratios)
+    print(sum_ratios)
+    # generateWorkloadOne(loadlen)
+    # generateWorkloadTwo(loadlen)
+    # generateWorkloadThree(loadlen)
+    # generateWorkloadFour(loadlen)
+    # generateWorkloadFive(loadlen)
 
 
 
 if __name__ == "__main__":
-    main(10, 1000000)
+    main(25, 1000000)
