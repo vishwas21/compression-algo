@@ -12,3 +12,7 @@ workload/*
 rle
 delta
 snappy
+
+compressed.dat
+decompressed.dat
+zstd

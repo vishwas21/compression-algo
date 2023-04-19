@@ -1,13 +1,16 @@
 import random
 
 uniqueNumbers = []
-ratios = []
+blocks = []
 
 def generateWorkloadOne(loadlen):
     file = open("./load/workloadOne.txt", "w")
 
+    global blocks
+    random.shuffle(blocks)
+
     for i in range(len(uniqueNumbers)):
-        for _ in range(int((loadlen * ratios[i]))):
+        for _ in range(int((blocks[i]))):
             file.write(str(uniqueNumbers[i]) + "\n")
 
     file.close()
@@ -16,7 +19,7 @@ def generateWorkloadOne(loadlen):
 
     file.write("Workload One: \n")
     for i in range(len(uniqueNumbers)):
-        file.write(str(int((loadlen * ratios[i]))) + " " + str(uniqueNumbers[i]) + " ")
+        file.write(str(int((blocks[i]))) + " " + str(uniqueNumbers[i]) + " ")
     file.write("\n")
     file.close()
     
@@ -149,33 +152,20 @@ def main(n, loadlen):
     for i in range(1, n + 1):
         uniqueNumbers.append(i)
 
-    ratios = []
-    total = 0
+    global blocks
 
+    remaining_size = loadlen
+    min_block = 1
+    max_block = loadlen // n
     for i in range(n - 1):
-        ratio = random.uniform(0, 1 - total)
-        ratios.append(ratio)
-        total += ratio
+        block_size = random.randint(min_block, max_block)
+        if block_size == 25:
+            block_size = random.randint(min_block, max_block)
+        blocks.append(block_size)
+        remaining_size -= block_size
+    blocks.append(remaining_size)
 
-    # Calculate the last ratio value to ensure the sum is equal to 0.5
-    ratios.append(1 - sum(ratios))
-
-    # Check if the last value is negative and adjust the previous value if necessary
-    if ratios[-1] < 0:
-        ratios[-2] += ratios[-1]
-        ratios[-1] = 0
-
-    # Round off each value to 7 decimal places and ensure that it's not equal to 0.0
-    ratios = [round(ratio, 7) if round(ratio, 7) != 0 else 0.0000001 for ratio in ratios]
-
-
-    # ratios = [round(ratio, 5) for ratio in ratios]
-    # ratios.append(1 - sum(ratios))
-    sum_ratios = sum(ratios)
-
-    print(ratios)
-    print(sum_ratios)
-    # generateWorkloadOne(loadlen)
+    generateWorkloadOne(loadlen)
     # generateWorkloadTwo(loadlen)
     # generateWorkloadThree(loadlen)
     # generateWorkloadFour(loadlen)
@@ -184,4 +174,4 @@ def main(n, loadlen):
 
 
 if __name__ == "__main__":
-    main(25, 1000000)
+    main(50, 10000000)

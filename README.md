@@ -16,3 +16,5 @@ Commands:
 -   ./main <input_file>
 -   Eg: ./main ./data_1000000-elems_1-kperct_1-lperct_1seed1680539487.dat
 -   g++ -I/Users/vishwasb/personal/masters/Spring2023/CS561/FinalProject/compression-code ZStandard.cpp -o ZStandard
+-   clang++ -std=c++11 -stdlib=libc++ -I/usr/local/include -L/opt/homebrew/lib/ -o zstd ZStandard.cpp -lzstd
+-   brew install zstd

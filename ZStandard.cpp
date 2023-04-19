@@ -1,48 +1,63 @@
+#include <fstream>
 #include <iostream>
 #include <vector>
-#include <zstd.h>
+#include "zstd.h"
 
-using namespace std;
+void compress(const std::string& in_filename, const std::string& out_filename) {
+  // Read the input file into a buffer
+  std::ifstream in_file(in_filename, std::ios::binary);
+  std::vector<char> in_buf(std::istreambuf_iterator<char>(in_file), {});
 
-// Compress the input data using zstandard
-vector<char> compress(const char* data, size_t size) {
-    size_t compressed_size = ZSTD_compressBound(size);
-    vector<char> compressed_data(compressed_size);
-
-    size_t actual_size = ZSTD_compress(compressed_data.data(), compressed_size, data, size, ZSTD_maxCLevel());
-    if (ZSTD_isError(actual_size)) {
-        cerr << "Compression failed: " << ZSTD_getErrorName(actual_size) << endl;
-        exit(1);
-    }
-
-    compressed_data.resize(actual_size);
-    return compressed_data;
+  // Create an output file and write the compressed data to it
+  std::ofstream out_file(out_filename, std::ios::binary);
+  const size_t max_compressed_size = ZSTD_compressBound(in_buf.size());
+  std::vector<char> out_buf(max_compressed_size);
+  const size_t compressed_size = ZSTD_compress(out_buf.data(), max_compressed_size, in_buf.data(), in_buf.size(), ZSTD_maxCLevel());
+  out_file.write(out_buf.data(), compressed_size);
 }
 
-// Decompress the input data using zstandard
-vector<char> decompress(const char* data, size_t size, size_t decompressed_size) {
-    vector<char> decompressed_data(decompressed_size);
+void decompress(const std::string& in_filename, const std::string& out_filename) {
+  // Read the input file into a buffer
+  std::ifstream in_file(in_filename, std::ios::binary);
+  std::vector<char> in_buf(std::istreambuf_iterator<char>(in_file), {});
 
-    size_t actual_size = ZSTD_decompress(decompressed_data.data(), decompressed_size, data, size);
-    if (ZSTD_isError(actual_size)) {
-        cerr << "Decompression failed: " << ZSTD_getErrorName(actual_size) << endl;
-        exit(1);
-    }
+  // Determine the size of the decompressed data
+  const size_t decomp_size = ZSTD_getFrameContentSize(in_buf.data(), in_buf.size());
 
-    return decompressed_data;
+  // Create an output file and write the decompressed data to it
+  std::ofstream out_file(out_filename, std::ios::binary);
+  std::vector<char> out_buf(decomp_size);
+  const size_t decompressed_size = ZSTD_decompress(out_buf.data(), decomp_size, in_buf.data(), in_buf.size());
+  out_file.write(out_buf.data(), decompressed_size);
 }
 
 int main() {
-    const char* input_data = "Hello, world!";
-    size_t input_size = strlen(input_data);
+  const std::string input_filename = "./workload/data_1000000-elems_1-kperct_1-lperct_1seed1681108605.dat";
+  const std::string compressed_filename = "compressed.dat";
+  const std::string decompressed_filename = "decompressed.dat";
 
-    // Compress the input data
-    vector<char> compressed_data = compress(input_data, input_size);
-    cout << "Compressed data size: " << compressed_data.size() << endl;
+  // Compress the input file
+  compress(input_filename, compressed_filename);
 
-    // Decompress the compressed data
-    vector<char> decompressed_data = decompress(compressed_data.data(), compressed_data.size(), input_size);
-    cout << "Decompressed data: " << decompressed_data.data() << endl;
+  std::cout << "Ran Compress";
 
-    return 0;
+  // Decompress the compressed file
+  decompress(compressed_filename, decompressed_filename);
+
+  std::cout << "Ran Decompress";
+
+  std::ifstream og_file(input_filename, std::ios::binary);
+  og_file.seekg(0, std::ios::end);
+  int file_size = og_file.tellg();
+  std::cout << "Size of the og file is " << " " << file_size << " " << "bytes" << std::endl;
+
+  std::ifstream cm_file(compressed_filename, std::ios::binary);
+  cm_file.seekg(0, std::ios::end);
+  file_size = cm_file.tellg();
+  std::cout << "Size of the cm file is " << " " << file_size << " " << "bytes" << std::endl;
+
+  std::ifstream dcm_file(decompressed_filename, std::ios::binary);
+  dcm_file.seekg(0, std::ios::end);
+  file_size = dcm_file.tellg();
+  std::cout << "Size of the dcm file is " << " " << file_size << " " << "bytes" << std::endl;
 }
