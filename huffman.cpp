@@ -1,152 +1,234 @@
-#include <fstream>
-#include <vector>
 #include <iostream>
-#include <random>
-#include <set>
-#include <algorithm>
-#include <functional>
-#include <chrono>
-#include <string>
+#include <queue>
 #include <unordered_map>
+#include <bitset>
+#include <vector>
+#include <fstream>
 
 using namespace std;
 
+// A Huffman tree node
+struct HuffmanNode {
+    int data;
+    int freq;
+    HuffmanNode* left;
+    HuffmanNode* right;
 
-struct Match {
-    int offset;
-    int length;
+    HuffmanNode(int data, int freq) {
+        this->data = data;
+        this->freq = freq;
+        this->left = nullptr;
+        this->right = nullptr;
+    }
+
+    HuffmanNode(HuffmanNode* left, HuffmanNode* right) {
+        this->data = -1;
+        this->freq = left->freq + right->freq;
+        this->left = left;
+        this->right = right;
+    }
 };
 
+// Compare two Huffman tree nodes by frequency
+struct CompareNodes {
+    bool operator()(HuffmanNode* a, HuffmanNode* b) {
+        return a->freq > b->freq;
+    }
+};
 
-void print(std::vector <int> const &a) {
-   for(int i=0; i < 100; i++)
-   std::cout << a.at(i) << ' ';
+// Generate the code table for a Huffman tree
+void generate_code_table(HuffmanNode* node, string code, unordered_map<int, string>& code_table) {
+    if (node->data != -1) {
+        code_table[node->data] = code;
+    } else {
+        generate_code_table(node->left, code + "0", code_table);
+        generate_code_table(node->right, code + "1", code_table);
+    }
 }
 
-double measure_compression_ratio(const std::vector<int>& input_sequence, const std::vector<int>& compressed_sequence) {
-    double input_size = input_sequence.size() * sizeof(int);
-    double output_size = compressed_sequence.size() * sizeof(int);
-    return input_size / output_size;
+// // Compress a vector of integers using variable-length encoding
+// string compress(vector<int> data) {
+//     // Calculate the frequency of each integer
+//     unordered_map<int, int> freq;
+//     for (int d : data) {
+//         freq[d]++;
+//     }
+
+//     // Build the Huffman tree
+//     priority_queue<HuffmanNode*, vector<HuffmanNode*>, CompareNodes> pq;
+//     for (auto p : freq) {
+//         pq.push(new HuffmanNode(p.first, p.second));
+//     }
+//     while (pq.size() > 1) {
+//         HuffmanNode* left = pq.top(); pq.pop();
+//         HuffmanNode* right = pq.top(); pq.pop();
+//         pq.push(new HuffmanNode(left, right));
+//     }
+//     HuffmanNode* root = pq.top();
+
+//     // Generate the code table
+//     unordered_map<int, string> code_table;
+//     generate_code_table(root, "", code_table);
+//     delete root;
+
+//     // Compress the data using the code table
+//     string compressed = "";
+//     for (int d : data) {
+//         string code = code_table[d];
+//         compressed += code;
+//     }
+
+//     // Pad the compressed data to a multiple of 8 bits
+//     int padding = 8 - compressed.length() % 8;
+//     if (padding < 8) {
+//         compressed += string(padding, '0');
+//     }
+
+//     // Convert the compressed data to bytes
+//     string bytes = "";
+//     for (int i = 0; i < (int)compressed.length(); i += 8) {
+//         bitset<8> bits(compressed.substr(i, 8));
+//         bytes += char(bits.to_ulong());
+//     }
+
+//     return bytes;
+// }
+
+void deleteTree(HuffmanNode* root) {
+    if (root == nullptr) {
+        return;
+    }
+    deleteTree(root->left);
+    deleteTree(root->right);
+    delete root;
 }
 
-void newRLEncoder(std::vector <int> const &input_sequence)  {
-    // Initialize the random number generator
-    srand(time(NULL));
-    std::vector<int> output_sequence;
+std::pair<std::string, HuffmanNode*> compress(const std::vector<int>& data) {
+    // Count the frequency of each integer in the data
+    std::unordered_map<int, int> freq;
+    for (int x : data) {
+        freq[x]++;
+    }
 
-    const int num_trials = 10;
+    // Build the Huffman tree
+    auto cmp = [](HuffmanNode* a, HuffmanNode* b) { return a->frequency > b->frequency; };
+    std::priority_queue<HuffmanNode*, std::vector<HuffmanNode*>, decltype(cmp)> pq(cmp);
+    for (auto p : freq) {
+        pq.push(new HuffmanNode(p.first, p.second));
+    }
+    while (pq.size() > 1) {
+        HuffmanNode* left = pq.top(); pq.pop();
+        HuffmanNode* right = pq.top(); pq.pop();
+        pq.push(new HuffmanNode(left, right));
+    }
 
-    // Measure the compression ratio using the run-length encoding algorithm
-    auto start_time = std::chrono::high_resolution_clock::now();
-    double average_ratio = 0.0;
-    for (int i = 0; i < num_trials; i++) {
-        int count = 1;
-        int current_element = input_sequence[0];
+    // Build the codewords for each integer
+    std::unordered_map<int, std::string> codewords;
+    buildCodewords(pq.top(), "", codewords);
 
-        for (size_t i = 1; i < input_sequence.size(); i++) {
-            if (input_sequence[i] == current_element) {
-                count++;
-            } else {
-                output_sequence.push_back(count);
-                output_sequence.push_back(current_element);
-                current_element = input_sequence[i];
-                count = 1;
+    // Encode the data using the codewords
+    std::string encoded_data;
+    for (int x : data) {
+        encoded_data += codewords[x];
+    }
+
+    // Convert the encoded data to a string of bytes
+    std::string compressed_data;
+    for (size_t i = 0; i < encoded_data.size(); i += 8) {
+        std::bitset<8> byte;
+        for (size_t j = 0; j < 8 && i + j < encoded_data.size(); j++) {
+            if (encoded_data[i + j] == '1') {
+                byte.set(7 - j);
             }
         }
-        output_sequence.push_back(count);
-        output_sequence.push_back(current_element);
-        average_ratio += measure_compression_ratio(input_sequence, output_sequence);
+        compressed_data += static_cast<char>(byte.to_ulong());
     }
-    average_ratio /= num_trials;
-    auto end_time = std::chrono::high_resolution_clock::now();
 
+    // Free the memory used by the Huffman tree
+    HuffmanNode* root = pq.top();
+    pq.pop();
+    deleteTree(root);
 
-    // Output the results
-    std::cout << std::endl << std::endl;
-    std::cout << "New Run Length Encoding Algorithm: " << std::endl;
-    std::cout << "Length : " << output_sequence.size() << std::endl;
-    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * output_sequence.size())) << std::endl;
-    std::cout << "Compression ratio : " << average_ratio << std::endl;
-    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
-
+    return std::make_pair(compressed_data, root);
 }
 
-vector<pair<int, int> > compress(const vector<int>& data) {
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    int n = data.size();
-    vector<pair<int, int> > output;
-
-    for (int i = 0; i < n; i++) {
-        int j = i + 1;
-        while (j < n && data[j] == data[i]) j++;
-        int len = j - i;
-        int dist = i;
-        output.push_back(make_pair(len, dist));
-        i = j - 1;
+// Decompress a string of bytes using a Huffman tree
+vector<int> decompress(string bytes, HuffmanNode* root) {
+    // Convert the bytes to bits
+    string bits = "";
+    for (char byte : bytes) {
+        bits += bitset<8>(byte).to_string();
     }
 
-    for (auto p : output) {
-        cout << p.first << " " << p.second << " ";
+    // Get the number of unused bits in the last byte
+    int unused_bits = bits[bits.size() - 1] - '0';
+    bits = bits.substr(0, bits.size() - unused_bits - 1);
+
+    // Decompress the bits using the Huffman tree
+    vector<int> data;
+    HuffmanNode* node = root;
+    for (char bit : bits) {
+        if (bit == '0') {
+            node = node->left;
+        } else {
+            node = node->right;
+        }
+        if (node->data != -1) {
+            data.push_back(node->data);
+            node = root;
+        }
     }
-    cout << endl;
-    
-    auto end_time = std::chrono::high_resolution_clock::now();
 
-    std::cout << std::endl << std::endl;
-    std::cout << "LZ new Encoding Algorithm: " << std::endl;
-    std::cout << "Length : " << output.size() << std::endl;
-    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * output.size())) << std::endl;
-    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
-
-    return output;
+    return data;
 }
 
-int LZCompress(std::vector <int> const &input_sequence) {
-    vector<pair<int, int> > tokens = compress(input_sequence);
-    // cout << "Compressed data:" << endl;
-    // for (Token token : tokens) {
-    //     cout << "(" << token.offset << "," << token.length << "," << token.next << ")" << endl;
-    // }
+int main() {
+    // Read the original data from a text file
+    ifstream in("input.txt");
+    vector<int> data;
+    int x;
+    while (in >> x) {
+        data.push_back(x);
+    }
+    in.close();
+
+    // Compress the data
+    auto [compressed_data, root] = compress(data);
+
+    // Write the compressed data to a binary file
+    ofstream out("compressed.bin", ios::binary);
+    out.write(compressed_data.c_str(), compressed_data.size());
+    out.close();
+
+    // Read the compressed data from the binary file
+    ifstream in2("compressed.bin", ios::binary);
+    string compressed_bytes((istreambuf_iterator<char>(in2)), istreambuf_iterator<char>());
+    in2.close();
+
+    // Decompress the data
+    auto decompressed_data = decompress(compressed_bytes, root);
+
+    // Print the results
+    cout << "Compressed data: ";
+    for (char byte : compressed_bytes) {
+        cout << (int)byte << " ";
+    }
     cout << endl;
+
+    cout << "Original data: ";
+    for (int x : data) {
+        cout << x << " ";
+    }
+    cout << endl;
+
+    cout << "Decompressed data: ";
+    for (int x : decompressed_data) {
+        cout << x << " ";
+    }
+    cout << endl;
+
+    // Free the memory used by the Huffman tree
+    deleteTree(root);
+
     return 0;
-}
-
-int main(int argc, char **argv)
-{
-  std::string input_file;
-  if (argc < 2)
-  {
-    std::string read_file = "./dataledger.txt";
-    std::ifstream myfile (read_file);
-    if (myfile.is_open())
-    {
-      getline (myfile,input_file);
-      myfile.close();
-    }
-  } else {
-    input_file = argv[1];
-  }
-
-  // read data
-  std::ifstream ifs;
-  std::vector<int> data;
-
-  ifs.open(input_file, std::ios::binary);
-  ifs.seekg(0, std::ios::end);
-  size_t filesize = ifs.tellg();
-  ifs.seekg(0, std::ios::beg);
-
-  data.resize(filesize / sizeof(int));
-  ifs.read((char *)data.data(), filesize);
-
-  std::cout << std::endl << std::endl;
-  std::cout << "Input Sequence : " << std::endl;
-  std::cout << "Length : " << data.size() << std::endl;
-  std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size()));
-
-  
-  // Compression Algorithm calls
-  // newRLEncoder(data);
-  LZCompress(data);
 }

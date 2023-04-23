@@ -35,7 +35,7 @@ vector<pair<int, int> > rle(vector<int>& arr) {
             count++;
             i++;
         }
-        res.push_back({ arr[i], count});
+        res.push_back({arr[i], count});
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -44,7 +44,7 @@ vector<pair<int, int> > rle(vector<int>& arr) {
     std::cout << "Run Length Encoding Algorithm: " << std::endl;
     std::cout << "Length : " << res.size() << std::endl;
     std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * res.size())) << std::endl;
-    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count() << " ns" << std::endl;
 
     return res;
 }
@@ -61,45 +61,38 @@ vector<int> rld(vector<pair<int, int> >& arr) {
 }
 
 // Function to calculate accuracy, precision, and recall of RLE
-void calculateMetrics(vector<int>& original, vector<int>& decoded) {
-    int n = original.size();
-    int m = decoded.size();
+void calculateMetrics(vector<int>& originalData, vector<int>& uncompressedData) {
+    int originalSize = originalData.size();
+    int uncompressedSize = uncompressedData.size();
+    double mse = 0.0;
+    for (int i = 0; i < originalSize; ++i) {
+        mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
+    }
+    mse /= (double)originalSize;
+    double psnr;
+    if (mse == 0.0) {
+        psnr = 100.0;
+    } else {
+        psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
+    }
+    std::cout << "PSNR: " << psnr << " dB" << std::endl;
 
-    int TP = 0; // true positives
-    int FP = 0; // false positives
-    int TN = 0; // true negatives
-    int FN = 0; // false negatives
-
-    for (int i = 0; i < n; i++) {
-        if (i < m && original[i] == decoded[i]) {
-            TP++;
-        } else {
-            FN++;
+    int matchedCount = 0;
+    for(int i = 0; i < originalSize; ++i) {
+        if(originalData[i] == uncompressedData[i]) {
+            matchedCount ++;
         }
     }
 
-    for (int i = 0; i < m; i++) {
-        if (i >= n || original[i] != decoded[i]) {
-            FP++;
-        } else {
-            TN++;
-        }
-    }
-
-    double accuracy = 100.0 * (double)(TP + TN) / (TP + FP + TN + FN);
-    double precision = 100.0 * (double)TP / (TP + FP);
-    double recall = 100.0 * (double)TP / (TP + FN);
-
-    cout << "Accuracy: " << accuracy << "%" << endl;
-    cout << "Precision: " << precision << "%" << endl;
-    cout << "Recall: " << recall << "%" << endl;
+    double accuracy = ((double)matchedCount / originalSize) * 100;
+    std::cout << "Accuracy : " << accuracy << "%" << std::endl;
 }
 
 int main(int argc, char **argv) {
     // Example usage
     std::string input_file;
 
-    input_file = "./workloadgen/load/workloadFive.txt";
+    input_file = "./workloadgen/load/workloadSix.txt";
 
     std::ifstream infile(input_file);
     std::vector<int> data;
@@ -112,17 +105,16 @@ int main(int argc, char **argv) {
     infile.close();
 
     std::cout << std::endl << std::endl;
-    std::cout << "Input Sequence : " << std::endl;
+    std::cout << "Input Data " << std::endl;
     std::cout << "Length : " << data.size() << std::endl;
     std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
-    vector<pair<int, int> > encoded = rle(data);
-    cout << "Encoded: ";
-    for (auto p : encoded) {
-        cout << "(" << p.first << ", " << p.second << ") ";
-    }
-    cout << endl;
 
+    vector<pair<int, int> > encoded = rle(data);
     vector<int> decoded = rld(encoded);
+
+    double compressionRatio = (double)data.size() / (double)encoded.size();
+    std::cout << "Compression ratio: " << compressionRatio << std::endl;
+
 
 
     calculateMetrics(data, decoded);

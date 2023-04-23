@@ -12,7 +12,9 @@ workload/*
 rle
 delta
 snappy
+huffman
 
 compressed.dat
 decompressed.dat
 zstd
+workloadgen/load
