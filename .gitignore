@@ -18,3 +18,5 @@ compressed.dat
 decompressed.dat
 zstd
 workloadgen/load
+
+*.bin
