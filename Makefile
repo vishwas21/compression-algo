@@ -18,6 +18,12 @@ snappy: snappy.cpp
 delta: delta.cpp
 	g++ -g -std=c++11 -o $@ $^
 
+bods: sortedness_data_generator.cpp
+	g++ -g -std=c++11 -o $@ $^
+
+huffman: huffman.cpp
+	g++ -g -std=c++11 -o $@ $^
+
 clear: 
 	rm main
 	rm workloadgenerator
@@ -25,4 +31,5 @@ clear:
 	rm snappy
 	rm rle
 	rm zstd
+	rm huffman
 	

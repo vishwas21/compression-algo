@@ -33,7 +33,7 @@ void delta_compress(std::vector<int>& data) {
     std::cout << "Delta Algorithm: " << std::endl;
     std::cout << "Length : " << data.size() << std::endl;
     std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
-    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count() << " ns" << std::endl;
 }
 
 void delta_decompress(std::vector<int>& data) {
@@ -42,46 +42,38 @@ void delta_decompress(std::vector<int>& data) {
     }
 }
 
-// Function to calculate accuracy, precision, and recall of RLE
-void calculateMetrics(std::vector<int>& original, std::vector<int>& decoded) {
-    int n = original.size();
-    int m = decoded.size();
+void calculateMetrics(std::vector<int>& originalData, std::vector<int>& uncompressedData) {
+    int originalSize = originalData.size();
+    int uncompressedSize = uncompressedData.size();
+    double mse = 0.0;
+    for (int i = 0; i < originalSize; ++i) {
+        mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
+    }
+    mse /= (double)originalSize;
+    double psnr;
+    if (mse == 0.0) {
+        psnr = 100.0;
+    } else {
+        psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
+    }
+    std::cout << "PSNR: " << psnr << " dB" << std::endl;
 
-    int TP = 0; // true positives
-    int FP = 0; // false positives
-    int TN = 0; // true negatives
-    int FN = 0; // false negatives
-
-    for (int i = 0; i < n; i++) {
-        if (i < m && original[i] == decoded[i]) {
-            TP++;
-        } else {
-            FN++;
+    int matchedCount = 0;
+    for(int i = 0; i < originalSize; ++i) {
+        if(originalData[i] == uncompressedData[i]) {
+            matchedCount ++;
         }
     }
 
-    for (int i = 0; i < m; i++) {
-        if (i >= n || original[i] != decoded[i]) {
-            FP++;
-        } else {
-            TN++;
-        }
-    }
-
-    double accuracy = 100.0 * (double)(TP + TN) / (TP + FP + TN + FN);
-    double precision = 100.0 * (double)TP / (TP + FP);
-    double recall = 100.0 * (double)TP / (TP + FN);
-
-    std::cout << "Accuracy: " << accuracy << "%" << std::endl;
-    std::cout << "Precision: " << precision << "%" << std::endl;
-    std::cout << "Recall: " << recall << "%" << std::endl;
+    double accuracy = ((double)matchedCount / originalSize) * 100;
+    std::cout << "Accuracy : " << accuracy << "%" << std::endl;
 }
 
 
 int main() {
     std::string input_file;
 
-    input_file = "./workloadgen/load/workloadFive.txt";
+    input_file = "./workloadgen/load/workloadSix.txt";
 
     std::ifstream infile(input_file);
     std::vector<int> data;
@@ -102,11 +94,8 @@ int main() {
 
     // Compress the data
     delta_compress(data);
-    // std::cout << "Compressed data: ";
-    // for (int val : data) {
-    //     std::cout << val << " ";
-    // }
-    // std::cout << std::endl;
+    double compressionRatio = (double)original.size() / (double)data.size();
+    std::cout << "Compression ratio: " << compressionRatio << std::endl;
 
     // Decompress the data
     delta_decompress(data);

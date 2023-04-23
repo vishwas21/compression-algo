@@ -1,158 +1,123 @@
-// #include <cstdio>
-// #include <cstdlib>
-// #include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-// #define SNAPPY_MAX_INPUT_SIZE (1 << 28)
-// #define SNAPPY_MAX_OUTPUT_SIZE (1 << 28)
-
-// // Compresses the given data and returns the compressed data.
-// // The compressed data is stored in a buffer of the given size.
-// // The return value is the number of bytes written to the buffer.
-// size_t snappy_compress(const char* input, size_t input_size, char* output, size_t output_size) {
-//   // Initialize the dynamic dictionary.
-//   snappy::Dictionary dictionary;
-//   dictionary.Initialize();
-
-//   // Search for repeated sequences in the input data.
-//   size_t offset = 0;
-//   while (offset < input_size) {
-//     // Find the next repeated sequence.
-//     size_t length = snappy::FindMatch(&dictionary, input, offset);
-
-//     // If no match was found, write the next byte to the output buffer.
-//     if (length == 0) {
-//       output[output_size - 1] = input[offset];
-//       output_size--;
-//       offset++;
-//     } else {
-//       // Write the length of the match to the output buffer.
-//       output[output_size - 1] = length;
-//       output_size--;
-
-//       // Write the offset of the match to the output buffer.
-//       output[output_size - 1] = offset - length;
-//       output_size--;
-
-//       // Write the bytes of the match to the output buffer.
-//       memcpy(output + output_size - length, input + offset, length);
-//       output_size -= length;
-
-//       offset += length;
-//     }
-//   }
-
-//   // Return the number of bytes written to the output buffer.
-//   return output_size;
-// }
-
-// // Decompresses the given data and returns the decompressed data.
-// // The decompressed data is stored in a buffer of the given size.
-// // The return value is the number of bytes written to the buffer.
-// size_t snappy_decompress(const char* input, size_t input_size, char* output, size_t output_size) {
-//   // Initialize the dynamic dictionary.
-//   snappy::Dictionary dictionary;
-//   dictionary.Initialize();
-
-//   // Read the length of the next match from the input buffer.
-//   size_t length = input[0];
-
-//   // Read the offset of the next match from the input buffer.
-//   size_t offset = input[1];
-
-//   // Write the bytes of the match to the output buffer.
-//   memcpy(output + output_size - length, input + 2, length);
-//   output_size -= length;
-
-//   // Recursively decompress the rest of the input data.
-//   size_t bytes_decompressed = snappy_decompress(input + 2 + length, input_size - 2 - length, output + output_size - length, output_size);
-//   output_size -= bytes_decompressed;
-
-//   // Return the number of bytes written to the output buffer.
-//   return output_size;
-// }
-
-// int main() {
-//   // Compress some data.
-//   char input[] = "Hello, world!";
-//   size_t input_size = strlen(input);
-//   char output[SNAPPY_MAX_OUTPUT_SIZE];
-//   size_t output_size = SNAPPY_MAX_OUTPUT_SIZE;
-//   size_t bytes_compressed = snappy_compress(input, input_size, output, output_size);
-
-//   // Print the compressed data.
-//   printf("Compressed data: ");
-//   for (size_t i = 0; i < bytes_compressed; i++) {
-//     printf("%02x ", output[i]);
-//   }
-//   printf("\n");
-
-//   // Decompress the data.
-//   char decompressed[SNAPPY_MAX_INPUT_SIZE];
-//   size_t decompressed_size = SNAPPY_MAX_INPUT_SIZE;
-//   size_t bytes_decompressed = snappy_decompress(output, bytes_compressed, decompressed, decompressed_size);
-
-//   // Print the decompressed data.
-//   printf("Decompressed data: %s\n", decompressed);
-
-//   return 0;
-// }
-
-#include <snappy.h>
-
-#define SNAPPY_MAX_INPUT_SIZE (1 << 28)
-#define SNAPPY_MAX_OUTPUT_SIZE (1 << 28)
-
-// Compresses the given data and returns the compressed data.
-// The compressed data is stored in a buffer of the given size.
-// The return value is the number of bytes written to the buffer.
-size_t snappy_compress(const char* input, size_t input_size, char* output, size_t output_size) {
-  // Initialize the dynamic dictionary.
-  snappy::CompressOptions options;
-  options.window_bits = 15;
-  snappy::Status status = snappy::Compress(input, input_size, output, output_size, options);
-  if (status != snappy::OK) {
-    return -1;
-  }
-
-  return output_size;
-}
-
-// Decompresses the given data and returns the decompressed data.
-// The decompressed data is stored in a buffer of the given size.
-// The return value is the number of bytes written to the buffer.
-size_t snappy_decompress(const char* input, size_t input_size, char* output, size_t output_size) {
-  // Initialize the dynamic dictionary.
-  snappy::DecompressOptions options;
-  snappy::Status status = snappy::Uncompress(input, input_size, output, output_size, options);
-  if (status != snappy::OK) {
-    return -1;
-  }
-
-  return output_size;
-}
+#include <fstream>
+#include <vector>
+#include <iostream>
+#include <random>
+#include <set>
+#include <algorithm>
+#include <functional>
+#include <chrono>
+#include <string>
+#include <unordered_map>
+#include "snappy-c.h"
 
 int main() {
-  // Compress some data.
-  char input[] = "Hello, world!";
-  size_t input_size = strlen(input);
-  char output[SNAPPY_MAX_OUTPUT_SIZE];
-  size_t output_size = SNAPPY_MAX_OUTPUT_SIZE;
-  size_t bytes_compressed = snappy_compress(input, input_size, output, output_size);
-
-  // Print the compressed data.
-  printf("Compressed data: ");
-  for (size_t i = 0; i < bytes_compressed; i++) {
-    printf("%02x ", output[i]);
+  // Open the input file
+  FILE* fp = fopen("./workloadgen/load/workloadTwo.txt", "rb");
+  if (!fp) {
+    printf("Failed to open input file.\n");
+    return 1;
   }
-  printf("\n");
 
-  // Decompress the data.
-  char decompressed[SNAPPY_MAX_INPUT_SIZE];
-  size_t decompressed_size = SNAPPY_MAX_INPUT_SIZE;
-  size_t bytes_decompressed = snappy_decompress(output, bytes_compressed, decompressed, decompressed_size);
+  // Determine the size of the input file
+  fseek(fp, 0, SEEK_END);
+  size_t input_size = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
 
-  // Print the decompressed data.
-  printf("Decompressed data: %s\n", decompressed);
+  // Print the size of the compressed data
+  printf("Input size: %zu\n", input_size);
+
+  // Read the input file into a buffer
+  uint64_t* input_data = (uint64_t*)malloc(input_size);
+  size_t count = fread(input_data, sizeof(uint64_t), input_size / sizeof(uint64_t), fp);
+  fclose(fp);
+
+  // Compress the input data using Snappy
+  size_t compressed_size = snappy_max_compressed_length(input_size);
+  char* compressed_data = (char*)malloc(compressed_size);
+  auto start_time = std::chrono::high_resolution_clock::now();
+  snappy_status status = snappy_compress((const char*)input_data, count * sizeof(uint64_t), compressed_data, &compressed_size);
+  if (status != SNAPPY_OK) {
+    printf("Failed to compress data.\n");
+    free(input_data);
+    free(compressed_data);
+    return 1;
+  }
+  auto end_time = std::chrono::high_resolution_clock::now();
+
+  std::cout << "Time : " << std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count() << " ns" << std::endl;
+
+  // Print the size of the compressed data
+  printf("Compressed size: %zu\n", compressed_size);
+
+  // Decompress the data
+  size_t uncompressed_size = 0;
+  status = snappy_uncompressed_length(compressed_data, compressed_size, &uncompressed_size);
+  if (status != SNAPPY_OK) {
+    printf("Failed to get uncompressed size.\n");
+    free(input_data);
+    free(compressed_data);
+    return 1;
+  }
+
+  uint64_t* uncompressed_data = (uint64_t*)malloc(uncompressed_size);
+  status = snappy_uncompress(compressed_data, compressed_size, (char*)uncompressed_data, &uncompressed_size);
+  if (status != SNAPPY_OK) {
+    printf("Failed to uncompress data.\n");
+    free(input_data);
+    free(compressed_data);
+    free(uncompressed_data);
+    return 1;
+  }
+
+  // Print the size of the compressed data
+  printf("Uncompressed size: %zu\n", uncompressed_size);
+
+  // Verify that the uncompressed data is equal to the input data
+  if (uncompressed_size == input_size && memcmp(input_data, uncompressed_data, input_size) == 0) {
+    printf("Compression and decompression successful!\n");
+  } else {
+    printf("Compression and decompression failed!\n");
+  }
+
+
+  // Calculate accuracy, precision
+    std::vector<int> originalData(input_data, input_data + input_size / sizeof(uint64_t));
+    std::vector<int> uncompressedData(uncompressed_data, uncompressed_data + uncompressed_size / sizeof(uint64_t));
+    int originalSize = originalData.size();
+    int uncompressedSize = uncompressedData.size();
+    double compressionRatio = (double)uncompressed_size / (double)compressed_size;
+    double mse = 0.0;
+    for (int i = 0; i < originalSize; ++i) {
+        mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
+    }
+    mse /= (double)originalSize;
+    double psnr;
+    if (mse == 0.0) {
+        psnr = 100.0;
+    } else {
+        psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
+    }
+    std::cout << "Compression ratio: " << compressionRatio << std::endl;
+    std::cout << "PSNR: " << psnr << " dB" << std::endl;
+
+    int matchedCount = 0;
+    for(int i = 0; i < originalSize; ++i) {
+        if(originalData[i] == uncompressedData[i]) {
+            matchedCount ++;
+        }
+    }
+
+    double accuracy = ((double)matchedCount / originalSize) * 100;
+    std::cout << "Accuracy : " << accuracy << "%" << std::endl;
+
+  // Free memory
+  free(input_data);
+  free(compressed_data);
+  free(uncompressed_data);
 
   return 0;
 }
