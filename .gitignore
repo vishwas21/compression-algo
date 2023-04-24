@@ -13,6 +13,7 @@ rle
 delta
 snappy
 huffman
+lz
 
 compressed.dat
 decompressed.dat

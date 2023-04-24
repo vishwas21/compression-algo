@@ -24,6 +24,9 @@ bods: sortedness_data_generator.cpp
 huffman: huffman.cpp
 	g++ -g -std=c++14 -o $@ $^
 
+lz: lz77.cpp
+	g++ -g -std=c++11 -o $@ $^
+
 clear: 
 	rm main
 	rm workloadgenerator
