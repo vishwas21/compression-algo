@@ -13,8 +13,20 @@ rle
 delta
 snappy
 huffman
+lz
 
 compressed.dat
 decompressed.dat
 zstd
 workloadgen/load
+
+*.bin
+
+encoded.txt
+lz77encoding
+lz77encoding.cpp
+decoding.cpp
+encoding.cpp
+
+variableByteEncoding.cpp
+workloadgen/test.py
