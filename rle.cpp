@@ -18,7 +18,7 @@ double measure_compression_ratio(const std::vector<int>& input_sequence, const s
 }
 
 void print(std::vector <int> const &a) {
-   for(int i=104770; i < 104970; i++)
+   for(int i=5890; i < 6234; i++)
    std::cout << a.at(i) << ' ';
 }
 
