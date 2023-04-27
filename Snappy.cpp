@@ -16,7 +16,7 @@
 
 int main() {
   // Open the input file
-  FILE* fp = fopen("./workloadgen/load/workloadTwo.txt", "rb");
+  FILE* fp = fopen("./workloadgen/load/workloadNormalDist.txt";, "rb");
   if (!fp) {
     printf("Failed to open input file.\n");
     return 1;
