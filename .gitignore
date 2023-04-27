@@ -25,3 +25,8 @@ workloadgen/load
 encoded.txt
 lz77encoding
 lz77encoding.cpp
+decoding.cpp
+encoding.cpp
+
+variableByteEncoding.cpp
+workloadgen/test.py

@@ -21,7 +21,7 @@ void compress(const std::string& in_filename, const std::string& out_filename) {
 
   std::cout << std::endl << std::endl;
     std::cout << "ZStandard Compression Algorithm: " << std::endl;
-    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ns" << std::endl;
+    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count() << " ns" << std::endl;
 }
 
 void decompress(const std::string& in_filename, const std::string& out_filename) {
@@ -48,13 +48,13 @@ void calculateMetrics(std::vector<int>& originalData, std::vector<int>& uncompre
         mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
     }
     mse /= (double)originalSize;
-    double psnr;
-    if (mse == 0.0) {
-        psnr = 100.0;
-    } else {
-        psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
-    }
-    std::cout << "PSNR: " << psnr << " dB" << std::endl;
+    // double psnr;
+    // if (mse == 0.0) {
+    //     psnr = 100.0;
+    // } else {
+    //     psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
+    // }
+    // std::cout << "PSNR: " << psnr << " dB" << std::endl;
 
     int matchedCount = 0;
     for(int i = 0; i < originalSize; ++i) {
@@ -83,7 +83,7 @@ std::vector<int> read_file(const std::string& filename) {
 }
 
 int main() {
-  const std::string input_filename = "./workloadgen/load/workloadOne.txt";
+  const std::string input_filename = "./workloadgen/load/workloadUQuadDist.txt";
   const std::string compressed_filename = "compressed.dat";
   const std::string decompressed_filename = "decompressed.dat";
 

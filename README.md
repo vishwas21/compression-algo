@@ -18,7 +18,8 @@ Commands:
 -   g++ -I/Users/vishwasb/personal/masters/Spring2023/CS561/FinalProject/compression-code ZStandard.cpp -o ZStandard
 -   clang++ -std=c++11 -stdlib=libc++ -I/usr/local/include -L/opt/homebrew/lib/ -o zstd ZStandard.cpp -lzstd && ./zstd
 -   brew install zstd
+-   /Users/vishwasb/Downloads/boost_1_82_0
 
 Snappy
 
--   clang++ -std=c++11 -stdlib=libc++ -I/usr/local/include -L/opt/homebrew/lib/ -o snappy Snappy.cpp -lsnappy
+-   clang++ -std=c++11 -stdlib=libc++ -I/usr/local/include -L/opt/homebrew/lib/ -o snappy Snappy.cpp -lsnappy && ./snappy

@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <vector>
 #include <tuple>
@@ -103,7 +104,7 @@ void calculateMetrics(std::vector<int>& originalData, std::vector<int>& uncompre
 int main() {
     string line;
     vector<int> input;
-    ifstream file("workloadgen/load/workloadOne.txt");
+    ifstream file("workloadgen/load/workloadUQuadDist.txt");
     if (file.is_open()) {
         while (getline(file, line)) {
             istringstream iss(line);
@@ -120,7 +121,11 @@ int main() {
 
     std::cout << "File Read successfull" << std::endl;
 
+    auto start_time = std::chrono::high_resolution_clock::now();
     vector<Triple> compressed = lz77_compress(input);
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+    std::cout << "Time : " << std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count() << " ns" << std::endl;
 
     std::cout << "File Compress successfull" << std::endl;
 
