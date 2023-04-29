@@ -10,6 +10,7 @@ workload/*
 
 *.dSYM
 rle
+rles
 delta
 snappy
 huffman
@@ -30,3 +31,5 @@ encoding.cpp
 
 variableByteEncoding.cpp
 workloadgen/test.py
+
+sortedload/

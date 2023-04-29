@@ -22,21 +22,29 @@ void print(std::vector <int> const &a) {
    std::cout << a.at(i) << ' ';
 }
 
-// Function to perform run-length encoding
-vector<pair<int, int> > rle(vector<int>& arr) {
-    auto start_time = std::chrono::high_resolution_clock::now();
-    int n = arr.size();
-
-    vector<pair<int, int> > res;
-
-    for (int i = 0; i < n; i++) {
-        int count = 1;
-        while (i < n - 1 && arr[i] == arr[i+1]) {
-            count++;
-            i++;
-        }
-        res.push_back({arr[i], count});
+void printPairs(const vector<pair<int, int> >& pairs) {
+    for (const auto& p : pairs) {
+        cout << "(" << p.first << ", " << p.second << ")" << endl;
     }
+}
+
+std::vector<std::pair<int, int> > rle(std::vector<int>& arr) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::vector<std::pair<int, int> > res;
+    int n = arr.size();
+    if (n == 0) {
+        return res;
+    }
+    int count = 1;
+    for (int i = 1; i < n; i++) {
+        if (arr[i] == arr[i-1]+1) {
+            count++;
+        } else {
+            res.push_back({arr[i-1]-count+1, count});
+            count = 1;
+        }
+    }
+    res.push_back({arr[n-1]-count+1, count});
 
     auto end_time = std::chrono::high_resolution_clock::now();
 
@@ -49,16 +57,19 @@ vector<pair<int, int> > rle(vector<int>& arr) {
     return res;
 }
 
-// Function to perform run-length decoding
-vector<int> rld(vector<pair<int, int> >& arr) {
-    vector<int> res;
-    for (auto p : arr) {
-        for (int i = 0; i < p.second; i++) {
-            res.push_back(p.first);
+std::vector<int> rld(std::vector<std::pair<int, int> >& pairs) {
+    std::vector<int> res;
+    for (auto p : pairs) {
+        int start = p.first;
+        int length = p.second;
+        for (int i = start; i < start+length; i++) {
+            res.push_back(i);
         }
     }
     return res;
 }
+
+
 
 // Function to calculate accuracy, precision, and recall of RLE
 void calculateMetrics(vector<int>& originalData, vector<int>& uncompressedData) {
@@ -92,7 +103,7 @@ int main(int argc, char **argv) {
     // Example usage
     std::string input_file;
 
-    input_file = "./workloadgen/load/workloadNormal.txt";
+    input_file = "./workloadgen/sortedload/workload_N5000000_K1_L100.txt";
 
     std::ifstream infile(input_file);
     std::vector<int> data;
@@ -110,12 +121,13 @@ int main(int argc, char **argv) {
     std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
 
     vector<pair<int, int> > encoded = rle(data);
+
+    // printPairs(encoded);
+
     vector<int> decoded = rld(encoded);
 
     double compressionRatio = (double)data.size() / (double)encoded.size();
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
-
-
 
     calculateMetrics(data, decoded);
 
