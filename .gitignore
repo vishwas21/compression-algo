@@ -10,6 +10,7 @@ workload/*
 
 *.dSYM
 rle
+rles
 delta
 snappy
 huffman
