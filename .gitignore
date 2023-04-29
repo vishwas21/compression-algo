@@ -31,3 +31,5 @@ encoding.cpp
 
 variableByteEncoding.cpp
 workloadgen/test.py
+
+sortedload/
