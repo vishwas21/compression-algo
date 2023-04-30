@@ -4,6 +4,13 @@
 #include <vector>
 #include <fstream>
 
+#include <random>
+#include <set>
+#include <algorithm>
+#include <functional>
+#include <chrono>
+#include <string>
+
 using namespace std;
 
 // Huffman Tree Node
