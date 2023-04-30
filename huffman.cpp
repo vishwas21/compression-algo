@@ -164,7 +164,7 @@ void calculateMetrics(vector<int>& originalData, vector<int>& uncompressedData) 
 
 int main() {
     // Read input array from file
-    ifstream infile("./workloadgen/sortedload/workload_N5000000_K1_L50.txt");
+    ifstream infile("./workloadgen/load/workload_N5000000_K100_L100.txt");
     vector<int> input_arr;
     int num;
     while (infile >> num) {
