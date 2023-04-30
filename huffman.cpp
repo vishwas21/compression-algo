@@ -128,6 +128,33 @@ vector<int> decodeHuffman(vector<char>& encoded_str, HuffmanNode* root) {
     return decoded_arr;
 }
 
+void calculateMetrics(vector<int>& originalData, vector<int>& uncompressedData) {
+    int originalSize = originalData.size();
+    int uncompressedSize = uncompressedData.size();
+    double mse = 0.0;
+    for (int i = 0; i < originalSize; ++i) {
+        mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
+    }
+    mse /= (double)originalSize;
+    double psnr;
+    if (mse == 0.0) {
+        psnr = 100.0;
+    } else {
+        psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
+    }
+    std::cout << "PSNR: " << psnr << " dB" << std::endl;
+
+    int matchedCount = 0;
+    for(int i = 0; i < originalSize; ++i) {
+        if(originalData[i] == uncompressedData[i]) {
+            matchedCount ++;
+        }
+    }
+
+    double accuracy = ((double)matchedCount / originalSize) * 100;
+    std::cout << "Accuracy : " << accuracy << "%" << std::endl;
+}
+
 int main() {
     // Read input array from file
     ifstream infile("./workloadgen/sortedload/workload_N5000000_K1_L50.txt");
@@ -153,6 +180,17 @@ int main() {
     // Decode Huffman Encoded vector<char> to integer array
     HuffmanNode* root = buildHuffmanTree(freq_map_char);
     vector<int> decoded_arr = decodeHuffman(encoded_vec, root);
+
+    std::cout << std::endl << std::endl;
+    std::cout << "Input Data " << std::endl;
+    std::cout << "Length : " << input_arr.size() << std::endl;
+    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * input_arr.size())) << std::endl;
+
+    double compressionRatio = (double)input_arr.size() / (double)encoded_vec.size();
+    std::cout << "Compression ratio: " << compressionRatio << std::endl;
+
+    calculateMetrics(input_arr, decoded_arr);
+
 
     // Verify that encoded and decoded arrays are the same
     if (input_arr.size() != decoded_arr.size()) {
