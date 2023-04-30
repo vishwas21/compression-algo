@@ -15,6 +15,7 @@ delta
 snappy
 huffman
 lz
+lz4
 
 compressed.dat
 decompressed.dat

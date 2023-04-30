@@ -2,238 +2,192 @@
 #include <queue>
 #include <unordered_map>
 #include <vector>
-#include <bitset>
 #include <fstream>
 
 using namespace std;
 
-// Define a structure for Huffman tree nodes
-struct HuffmanNode {
-    int value;
-    int frequency;
-    HuffmanNode* left;
-    HuffmanNode* right;
-    HuffmanNode(int value, int frequency) {
-        this->value = value;
-        this->frequency = frequency;
+// Huffman Tree Node
+class HuffmanNode {
+public:
+    int data;
+    char symbol;
+    HuffmanNode *left, *right;
+
+    // Constructor
+    HuffmanNode(int data, char symbol) {
+        this->data = data;
+        this->symbol = symbol;
         left = right = nullptr;
     }
+
+    // Destructor
     ~HuffmanNode() {
         delete left;
         delete right;
     }
 };
 
-// Define a custom comparator for the priority queue
-struct Compare {
-    bool operator()(HuffmanNode* a, HuffmanNode* b) {
-        return a->frequency > b->frequency;
+// Custom comparator for priority_queue
+class Compare {
+public:
+    bool operator() (const HuffmanNode* a, const HuffmanNode* b) const {
+        return a->data > b->data;
     }
 };
 
-// Function to generate Huffman tree
-HuffmanNode* generateHuffmanTree(const unordered_map<int, int>& frequencies) {
+// Build Huffman Tree
+HuffmanNode* buildHuffmanTree(unordered_map<char, int>& freq_map) {
     priority_queue<HuffmanNode*, vector<HuffmanNode*>, Compare> pq;
-    for (const auto& freq : frequencies) {
-        pq.push(new HuffmanNode(freq.first, freq.second));
+
+    for (auto& p : freq_map) {
+        pq.push(new HuffmanNode(p.second, p.first));
     }
+
     while (pq.size() > 1) {
-        HuffmanNode* left = pq.top();
+        HuffmanNode *left = pq.top();
         pq.pop();
-        HuffmanNode* right = pq.top();
+
+        HuffmanNode *right = pq.top();
         pq.pop();
-        HuffmanNode* parent = new HuffmanNode(-1, left->frequency + right->frequency);
+
+        HuffmanNode *parent = new HuffmanNode(left->data + right->data, '#');
+
         parent->left = left;
         parent->right = right;
+
         pq.push(parent);
     }
+
     return pq.top();
 }
 
-// Function to generate Huffman codes
-void generateHuffmanCodes(HuffmanNode* root, const string& code, unordered_map<int, string>& codes) {
-    if (!root) {
+// Traverse Huffman Tree and store code in a map
+void traverseHuffmanTree(HuffmanNode* root, string code, unordered_map<char, string>& huffman_code) {
+    if (root == nullptr) {
         return;
     }
-    if (root->value != -1) {
-        codes[root->value] = code;
+
+    if (root->left == nullptr && root->right == nullptr) {
+        huffman_code[root->symbol] = code;
     }
-    generateHuffmanCodes(root->left, code + "0", codes);
-    generateHuffmanCodes(root->right, code + "1", codes);
+
+    traverseHuffmanTree(root->left, code + "0", huffman_code);
+    traverseHuffmanTree(root->right, code + "1", huffman_code);
 }
 
-string compress(const vector<int>& workload) {
-    // Generate frequency map for each unique integer in the workload
-    unordered_map<int, int> frequencies;
-    for (const auto& i : workload) {
-        frequencies[i]++;
+// Encode integer array using Huffman Encoding
+string encodeHuffman(vector<int>& arr, HuffmanNode* root) {
+
+    // Traverse Huffman Tree and store Huffman Code in a map
+    unordered_map<char, string> huffman_code;
+    traverseHuffmanTree(root, "", huffman_code);
+
+    // Encode array using Huffman Code
+    string encoded_str = "";
+    for (int i : arr) {
+        encoded_str += huffman_code[i];
     }
-    // Generate Huffman tree
-    HuffmanNode* root = generateHuffmanTree(frequencies);
-    // Generate Huffman codes for each integer
-    unordered_map<int, string> codes;
-    generateHuffmanCodes(root, "", codes);
-    // Encode the integer workload using Huffman codes
-    string compressedWorkload;
-    for (const auto& i : workload) {
-        compressedWorkload += codes[i];
-    }
-    // Pad the compressed workload with zeros so that the length is a multiple of 8 bits
-    int padding = 8 - (compressedWorkload.length() % 8);
-    compressedWorkload.append(padding, '0');
-    // Convert compressed workload to binary string and return
-    string binaryString;
-    for (size_t i = 0; i < compressedWorkload.length(); i += 8) {
-        bitset<8> byte(compressedWorkload.substr(i, 8));
-        binaryString += char(byte.to_ulong());
-    }
-    return binaryString;
+
+    delete root;
+
+    return encoded_str;
 }
 
+// Decode Huffman Encoded string to integer array
+vector<int> decodeHuffman(string encoded_str, HuffmanNode* root) {
+    vector<int> decoded_arr;
 
-// Function to decompress integer workload from Huffman encoding
-vector<int> decompress(const string& compressedWorkload, const unordered_map<int, string>& codes) {
-    string binaryString;
-    for (const auto& c : compressedWorkload) {
-        bitset<8> byte(c);
-        binaryString += byte.to_string();
-    }
-    // Remove padding from binary string
-    int padding = binaryString.back() - '0';
-    binaryString.erase(binaryString.length() - padding);
-    // Decode the binary string using Huffman codes
-    vector<int> workload;
-    string code;
-    for (const auto& c : binaryString) {
-        code += c;
-        for (const auto& pair : codes) {
-            if (pair.second == code) {
-                workload.push_back(pair.first);
-                code = "";
-                break;
-            }
+    HuffmanNode* curr = root;
+    for (char c : encoded_str) {
+        if (c == '0') {
+            curr = curr->left;
+        } else {
+            curr = curr->right;
+        }
+
+        if (curr->left == nullptr && curr->right == nullptr) {
+            decoded_arr.push_back(curr->symbol);
+            curr = root;
         }
     }
-    return workload;
+
+    return decoded_arr;
 }
 
-int main() {
-    // Load integer workload from file
-    vector<int> workload;
-    ifstream inputFile("./workloadgen/load/workloadSix.txt");
+void calculateMetrics(vector<int>& originalData, vector<int>& uncompressedData) {
+    int originalSize = originalData.size();
+    int uncompressedSize = uncompressedData.size();
+    // double mse = 0.0;
+    // for (int i = 0; i < originalSize; ++i) {
+    //     mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
+    // }
+    // mse /= (double)originalSize;
+    // double psnr;
+    // if (mse == 0.0) {
+    //     psnr = 100.0;
+    // } else {
+    //     psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
+    // }
+    // std::cout << "PSNR: " << psnr << " dB" << std::endl;
+
+    int matchedCount = 0;
+    for(int i = 0; i < originalSize; ++i) {
+        if(originalData[i] == uncompressedData[i]) {
+            matchedCount ++;
+        }
+    }
+
+    double accuracy = ((double)matchedCount / originalSize) * 100;
+    std::cout << "Accuracy : " << accuracy << "%" << std::endl;
+}
+
+
+int main(int argc, char **argv) {
+    // Example usage
+    std::string input_file;
+
+    input_file = "./workloadgen/sortedload/workload_N5000000_K0_L0.txt";
+
+    std::ifstream infile(input_file);
+    std::vector<int> data;
+
     int num;
-    while (inputFile >> num) {
-        workload.push_back(num);
+    while (infile >> num) {
+        data.push_back(num);
     }
-    inputFile.close();
 
-    // Compress the workload using Huffman encoding
-    string compressedWorkload = compress(workload);
+    infile.close();
 
-    std::cout << "File Compress Successful" << std::endl;
+    std::cout << std::endl << std::endl;
+    std::cout << "Input Data " << std::endl;
+    std::cout << "Length : " << data.size() << std::endl;
+    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
 
-    if (compressedWorkload.length() % 8 != 0) {
-    throw std::invalid_argument("compressed workload length not multiple of 8");
-}
-
-    // Write compressed output to binary file
-    ofstream outputFile("./compressed.bin", ios::out | ios::binary);
-    for (size_t i = 0; i < compressedWorkload.size(); i += 8) {
-        bitset<8> byte(compressedWorkload.substr(i, 8));
-        outputFile.write((char*)&byte, sizeof(byte));
+    unordered_map<int, int> freq_map;
+    for (int i : data) {
+        freq_map[i]++;
     }
-    outputFile.close();
 
-    std::cout << "File Compress Write Successful" << std::endl;
-
-    // Read compressed data from binary file
-    string compressedData;
-    ifstream inputBinaryFile("./compressed.bin", ios::binary);
-    char byte;
-    while (inputBinaryFile.get(byte)) {
-        compressedData += byte;
+    // Build Huffman Tree
+    unordered_map<char, int> freq_map_char;
+    for (auto& p : freq_map) {
+        freq_map_char[p.first] = p.second;
     }
-    inputBinaryFile.close();
+    HuffmanNode* root = buildHuffmanTree(freq_map_char);
+    string encoded = encodeHuffman(data, root);
+    // delete root;
 
-    std::cout << "File Compress Read Successful" << std::endl;
 
-    // Generate Huffman tree and codes
-    unordered_map<int, int> frequencies;
-    for (const auto& integer : workload) {
-        frequencies[integer]++;
-    }
-    auto huffmanTree = generateHuffmanTree(frequencies);
-    unordered_map<int, string> codes;
-    generateHuffmanCodes(huffmanTree, "", codes);
+    // root = buildHuffmanTree(freq_map_char);
+    vector<int> decoded = decodeHuffman(encoded, root);
+    delete root;
 
-    // Decompress the compressed workload
-    vector<int> decompressedWorkload = decompress(compressedData, codes);
+    std::cout << (double)encoded.size() << std::endl;
 
-    std::cout << "File Decompress Successful" << std::endl;
+    double compressionRatio = (double)data.size() / (double)encoded.size();
+    std::cout << "Compression ratio: " << compressionRatio << std::endl;
 
-    // Verify that the decompressed workload matches the original workload
-    if (workload == decompressedWorkload) {
-        cout << "Compression and decompression successful!" << endl;
-    } else {
-        cout << "Compression and decompression unsuccessful!" << endl;
-    }
+    calculateMetrics(data, decoded);
 
     return 0;
 }
-
-
-
-
-
-
-
-// int main() {
-//     // Read the original data from a text file
-//     ifstream in("input.txt");
-//     vector<int> data;
-//     int x;
-//     while (in >> x) {
-//         data.push_back(x);
-//     }
-//     in.close();
-
-//     // Compress the data
-//     auto [compressed_data, root] = compress(data);
-
-//     // Write the compressed data to a binary file
-//     ofstream out("compressed.bin", ios::binary);
-//     out.write(compressed_data.c_str(), compressed_data.size());
-//     out.close();
-
-//     // Read the compressed data from the binary file
-//     ifstream in2("compressed.bin", ios::binary);
-//     string compressed_bytes((istreambuf_iterator<char>(in2)), istreambuf_iterator<char>());
-//     in2.close();
-
-//     // Decompress the data
-//     auto decompressed_data = decompress(compressed_bytes, root);
-
-//     // Print the results
-//     cout << "Compressed data: ";
-//     for (char byte : compressed_bytes) {
-//         cout << (int)byte << " ";
-//     }
-//     cout << endl;
-
-//     cout << "Original data: ";
-//     for (int x : data) {
-//         cout << x << " ";
-//     }
-//     cout << endl;
-
-//     cout << "Decompressed data: ";
-//     for (int x : decompressed_data) {
-//         cout << x << " ";
-//     }
-//     cout << endl;
-
-//     // Free the memory used by the Huffman tree
-//     deleteTree(root);
-
-//     return 0;
-// }

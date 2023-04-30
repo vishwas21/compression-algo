@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
     // Example usage
     std::string input_file;
 
-    input_file = "./workloadgen/load/workloadNormal.txt";
+    input_file = "./workloadgen/load/workloadScaleFour.txt";
 
     std::ifstream infile(input_file);
     std::vector<int> data;
