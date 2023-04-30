@@ -76,25 +76,39 @@ void traverseHuffmanTree(HuffmanNode* root, string code, unordered_map<char, str
 }
 
 // Encode integer array using Huffman Encoding
-string encodeHuffman(vector<int>& arr, HuffmanNode* root) {
+vector<char> encodeHuffman(vector<int>& arr) {
+    // Calculate frequency of each integer in the array
+    unordered_map<int, int> freq_map;
+    for (int i : arr) {
+        freq_map[i]++;
+    }
+
+    // Build Huffman Tree
+    unordered_map<char, int> freq_map_char;
+    for (auto& p : freq_map) {
+        freq_map_char[p.first] = p.second;
+    }
+    HuffmanNode* root = buildHuffmanTree(freq_map_char);
 
     // Traverse Huffman Tree and store Huffman Code in a map
     unordered_map<char, string> huffman_code;
     traverseHuffmanTree(root, "", huffman_code);
 
     // Encode array using Huffman Code
-    string encoded_str = "";
+    vector<char> encoded_str;
     for (int i : arr) {
-        encoded_str += huffman_code[i];
+        string code = huffman_code[i];
+        for (char c : code) {
+            encoded_str.push_back(c);
+        }
     }
 
-    delete root;
+    delete root; // free dynamically allocated memory
 
     return encoded_str;
 }
 
-// Decode Huffman Encoded string to integer array
-vector<int> decodeHuffman(string encoded_str, HuffmanNode* root) {
+vector<int> decodeHuffman(vector<char>& encoded_str, HuffmanNode* root) {
     vector<int> decoded_arr;
 
     HuffmanNode* curr = root;
@@ -114,57 +128,20 @@ vector<int> decodeHuffman(string encoded_str, HuffmanNode* root) {
     return decoded_arr;
 }
 
-void calculateMetrics(vector<int>& originalData, vector<int>& uncompressedData) {
-    int originalSize = originalData.size();
-    int uncompressedSize = uncompressedData.size();
-    // double mse = 0.0;
-    // for (int i = 0; i < originalSize; ++i) {
-    //     mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
-    // }
-    // mse /= (double)originalSize;
-    // double psnr;
-    // if (mse == 0.0) {
-    //     psnr = 100.0;
-    // } else {
-    //     psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
-    // }
-    // std::cout << "PSNR: " << psnr << " dB" << std::endl;
-
-    int matchedCount = 0;
-    for(int i = 0; i < originalSize; ++i) {
-        if(originalData[i] == uncompressedData[i]) {
-            matchedCount ++;
-        }
-    }
-
-    double accuracy = ((double)matchedCount / originalSize) * 100;
-    std::cout << "Accuracy : " << accuracy << "%" << std::endl;
-}
-
-
-int main(int argc, char **argv) {
-    // Example usage
-    std::string input_file;
-
-    input_file = "./workloadgen/sortedload/workload_N5000000_K0_L0.txt";
-
-    std::ifstream infile(input_file);
-    std::vector<int> data;
-
+int main() {
+    // Read input array from file
+    ifstream infile("./workloadgen/sortedload/workload_N5000000_K1_L50.txt");
+    vector<int> input_arr;
     int num;
     while (infile >> num) {
-        data.push_back(num);
+        input_arr.push_back(num);
     }
 
-    infile.close();
-
-    std::cout << std::endl << std::endl;
-    std::cout << "Input Data " << std::endl;
-    std::cout << "Length : " << data.size() << std::endl;
-    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
+    // Encode input array using Huffman Encoding
+    vector<char> encoded_vec = encodeHuffman(input_arr);
 
     unordered_map<int, int> freq_map;
-    for (int i : data) {
+    for (int i : input_arr) {
         freq_map[i]++;
     }
 
@@ -173,21 +150,26 @@ int main(int argc, char **argv) {
     for (auto& p : freq_map) {
         freq_map_char[p.first] = p.second;
     }
+    // Decode Huffman Encoded vector<char> to integer array
     HuffmanNode* root = buildHuffmanTree(freq_map_char);
-    string encoded = encodeHuffman(data, root);
-    // delete root;
+    vector<int> decoded_arr = decodeHuffman(encoded_vec, root);
 
+    // Verify that encoded and decoded arrays are the same
+    if (input_arr.size() != decoded_arr.size()) {
+        cout << "Error: Size of decoded array does not match size of original array\n";
+        return 0;
+    }
+    for (int i = 0; i < input_arr.size(); i++) {
+        if (input_arr[i] != decoded_arr[i]) {
+            cout << "Error: Decoded array does not match original array\n";
+            return 0;
+        }
+    }
 
-    // root = buildHuffmanTree(freq_map_char);
-    vector<int> decoded = decodeHuffman(encoded, root);
+    cout << "Encoded and decoded arrays are the same\n";
+
+    // Free memory allocated for Huffman Tree
     delete root;
-
-    std::cout << (double)encoded.size() << std::endl;
-
-    double compressionRatio = (double)data.size() / (double)encoded.size();
-    std::cout << "Compression ratio: " << compressionRatio << std::endl;
-
-    calculateMetrics(data, decoded);
 
     return 0;
 }
