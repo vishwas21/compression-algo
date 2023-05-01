@@ -104,7 +104,7 @@ void calculateMetrics(std::vector<int>& originalData, std::vector<int>& uncompre
 int main() {
     string line;
     vector<int> input;
-    ifstream file("workloadgen/load/workloadUQuadDist.txt");
+    ifstream file("workloadgen/load/workloadScaleFour.txt");
     if (file.is_open()) {
         while (getline(file, line)) {
             istringstream iss(line);

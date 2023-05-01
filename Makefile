@@ -27,6 +27,12 @@ huffman: huffman.cpp
 lz: lz77.cpp
 	g++ -g -std=c++11 -o $@ $^
 
+rles: rleSequential.cpp
+	g++ -g -std=c++11 -o $@ $^
+
+lz4: lz4.cpp
+	g++ -g -std=c++11 -o $@ $^
+
 clear: 
 	rm main
 	rm workloadgenerator

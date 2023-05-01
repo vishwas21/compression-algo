@@ -9,6 +9,8 @@
 #include <string>
 #include <unordered_map>
 
+using namespace std;
+
 double measure_compression_ratio(const std::vector<int>& input_sequence, const std::vector<int>& compressed_sequence) {
     double input_size = input_sequence.size() * sizeof(int);
     double output_size = compressed_sequence.size() * sizeof(int);
@@ -16,33 +18,61 @@ double measure_compression_ratio(const std::vector<int>& input_sequence, const s
 }
 
 void print(std::vector <int> const &a) {
-   for(int i=0; i < 1000; i++)
+   for(int i=5890; i < 6234; i++)
    std::cout << a.at(i) << ' ';
 }
 
-void delta_compress(std::vector<int>& data) {
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    for (int i = data.size() - 1; i > 0; i--) {
-        data[i] -= data[i - 1];
+void printPairs(const vector<pair<int, int> >& pairs) {
+    for (const auto& p : pairs) {
+        cout << "(" << p.first << ", " << p.second << ")" << endl;
     }
+}
+
+std::vector<std::pair<int, int> > rle(std::vector<int>& arr) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::vector<std::pair<int, int> > res;
+    int n = arr.size();
+    if (n == 0) {
+        return res;
+    }
+    int count = 1;
+    for (int i = 1; i < n; i++) {
+        if (arr[i] == arr[i-1]+1) {
+            count++;
+        } else {
+            res.push_back({arr[i-1]-count+1, count});
+            count = 1;
+        }
+    }
+    res.push_back({arr[n-1]-count+1, count});
 
     auto end_time = std::chrono::high_resolution_clock::now();
 
     std::cout << std::endl << std::endl;
-    std::cout << "Delta Algorithm: " << std::endl;
-    std::cout << "Length : " << data.size() << std::endl;
-    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
+    std::cout << "Run Length Encoding Algorithm: " << std::endl;
+    std::cout << "Length : " << res.size() << std::endl;
+    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * res.size())) << std::endl;
     std::cout << "Time : " << std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count() << " ns" << std::endl;
+
+    return res;
 }
 
-void delta_decompress(std::vector<int>& data) {
-    for (int i = 1; i < data.size(); i++) {
-        data[i] += data[i - 1];
+std::vector<int> rld(std::vector<std::pair<int, int> >& pairs) {
+    std::vector<int> res;
+    for (auto p : pairs) {
+        int start = p.first;
+        int length = p.second;
+        for (int i = start; i < start+length; i++) {
+            res.push_back(i);
+        }
     }
+    return res;
 }
 
-void calculateMetrics(std::vector<int>& originalData, std::vector<int>& uncompressedData) {
+
+
+// Function to calculate accuracy, precision, and recall of RLE
+void calculateMetrics(vector<int>& originalData, vector<int>& uncompressedData) {
     int originalSize = originalData.size();
     int uncompressedSize = uncompressedData.size();
     double mse = 0.0;
@@ -69,12 +99,11 @@ void calculateMetrics(std::vector<int>& originalData, std::vector<int>& uncompre
     std::cout << "Accuracy : " << accuracy << "%" << std::endl;
 }
 
-
-int main() {
+int main(int argc, char **argv) {
+    // Example usage
     std::string input_file;
 
-    input_file = "./workloadgen/load/workloadScaleFour.txt";
-    // input_file = "./workloadgen/sortedload/workload_N5000000_K100_L100.txt";
+    input_file = "./workloadgen/sortedload/workload_N5000000_K100_L100.txt";
 
     std::ifstream infile(input_file);
     std::vector<int> data;
@@ -87,21 +116,20 @@ int main() {
     infile.close();
 
     std::cout << std::endl << std::endl;
-    std::cout << "Input Sequence : " << std::endl;
+    std::cout << "Input Data " << std::endl;
     std::cout << "Length : " << data.size() << std::endl;
     std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
 
-    std::vector<int> original(data);
+    vector<pair<int, int> > encoded = rle(data);
 
-    // Compress the data
-    delta_compress(data);
-    double compressionRatio = (double)original.size() / (double)data.size();
+    // printPairs(encoded);
+
+    vector<int> decoded = rld(encoded);
+
+    double compressionRatio = (double)data.size() / (double)encoded.size();
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
 
-    // Decompress the data
-    delta_decompress(data);
+    calculateMetrics(data, decoded);
 
-    calculateMetrics(original, data);
-    
     return 0;
 }
