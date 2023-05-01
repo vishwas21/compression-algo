@@ -1,51 +1,58 @@
-#include "lz4.h"
-#include <vector>
 #include <iostream>
+#include <vector>
+#include "lz4.h"
 
-void compress(const std::vector<int>& numbers, std::vector<char>& compressed) {
-    // Compress the vector using LZ4
-    compressed.resize(LZ4_compressBound(numbers.size() * sizeof(int)));
-    int compressed_size = LZ4_compress_default((const char*)numbers.data(), compressed.data(), numbers.size() * sizeof(int), compressed.size());
+void compress(const std::vector<int>& input, std::vector<char>& output) {
+    int uncompressed_size = input.size() * sizeof(int);
+    int max_compressed_size = LZ4_compressBound(uncompressed_size);
+    output.resize(max_compressed_size);
 
-    // Resize the compressed vector to the actual compressed size
-    compressed.resize(compressed_size);
+    int compressed_size = LZ4_compress_fast(
+        reinterpret_cast<const char*>(input.data()), output.data(),
+        uncompressed_size, max_compressed_size, 1
+    );
+
+    if (compressed_size <= 0) {
+        throw std::runtime_error("compression error");
+    }
+
+    output.resize(compressed_size);
 }
 
-void decompress(const std::vector<char>& compressed, std::vector<int>& numbers) {
-    // Calculate the maximum possible uncompressed size
-    int uncompressed_size = LZ4_decompress_safe_max_input_size(compressed.size(), LZ4_MAX_INPUT_SIZE);
+void decompress(const std::vector<char>& input, std::vector<int>& output) {
+    int uncompressed_size = output.size() * sizeof(int);
+    int decompressed_size = LZ4_decompress_safe(
+        input.data(), reinterpret_cast<char*>(output.data()),
+        input.size(), uncompressed_size
+    );
 
-    // Allocate a buffer for the uncompressed data
-    std::vector<char> uncompressed(uncompressed_size);
+    if (decompressed_size <= 0) {
+        throw std::runtime_error("decompression error");
+    }
 
-    // Decompress the data
-    int decompressed_size = LZ4_decompress_safe(compressed.data(), uncompressed.data(), compressed.size(), uncompressed.size());
-
-    // Resize the numbers vector to hold the uncompressed data
-    numbers.resize(decompressed_size / sizeof(int));
-
-    // Copy the uncompressed data into the numbers vector
-    std::memcpy(numbers.data(), uncompressed.data(), decompressed_size);
+    output.resize(decompressed_size / sizeof(int));
 }
 
 int main() {
-    // Generate a vector of large integers that are nearly sorted
-    std::vector<int> numbers;
-    for (int i = 0; i < 1000000; i++) {
-        numbers.push_back(i + rand() % 10 - 5);
-    }
-
-    // Compress the vector using LZ4
+    std::vector<int> input = {1, 2, 3, 4, 5};
     std::vector<char> compressed;
-    compress(numbers, compressed);
-
-    // Decompress the compressed data
     std::vector<int> decompressed;
+
+    // compress the input
+    compress(input, compressed);
+
+    // decompress the compressed data
+    decompressed.resize(input.size());
     decompress(compressed, decompressed);
 
-    // Verify that the original and decompressed vectors are equal
-    bool equal = (numbers == decompressed);
-    std::cout << "Original and decompressed vectors are " << (equal ? "equal" : "not equal") << std::endl;
+    // check if the decompressed data matches the input
+    if (input != decompressed) {
+        std::cerr << "decompression error: data mismatch" << std::endl;
+        return 1;
+    }
+
+    std::cout << "data compressed from " << input.size() * sizeof(int) << " bytes to "
+              << compressed.size() << " bytes" << std::endl;
 
     return 0;
 }

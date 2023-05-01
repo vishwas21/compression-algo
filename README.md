@@ -23,3 +23,7 @@ Commands:
 Snappy
 
 -   clang++ -std=c++11 -stdlib=libc++ -I/usr/local/include -L/opt/homebrew/lib/ -o snappy Snappy.cpp -lsnappy && ./snappy
+
+LZ4
+
+-   clang++ -std=c++11 -stdlib=libc++ -I/usr/local/include -L/opt/homebrew/lib/ -o lz4 lz4.cpp -llz4 && ./lz4
