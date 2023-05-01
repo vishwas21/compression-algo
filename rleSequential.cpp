@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
     // Example usage
     std::string input_file;
 
-    input_file = "./workloadgen/sortedload/workload_N5000000_K1_L100.txt";
+    input_file = "./workloadgen/sortedload/workload_N5000000_K100_L100.txt";
 
     std::ifstream infile(input_file);
     std::vector<int> data;

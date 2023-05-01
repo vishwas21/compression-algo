@@ -73,7 +73,8 @@ void calculateMetrics(std::vector<int>& originalData, std::vector<int>& uncompre
 int main() {
     std::string input_file;
 
-    input_file = "./workloadgen/load/workloadSix.txt";
+    input_file = "./workloadgen/load/workloadScaleFour.txt";
+    // input_file = "./workloadgen/sortedload/workload_N5000000_K100_L100.txt";
 
     std::ifstream infile(input_file);
     std::vector<int> data;

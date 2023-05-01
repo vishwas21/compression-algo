@@ -30,6 +30,9 @@ lz: lz77.cpp
 rles: rleSequential.cpp
 	g++ -g -std=c++11 -o $@ $^
 
+lz4: lz4.cpp
+	g++ -g -std=c++11 -o $@ $^
+
 clear: 
 	rm main
 	rm workloadgenerator
