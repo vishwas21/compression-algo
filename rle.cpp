@@ -50,7 +50,7 @@ vector<int> rld(vector<pair<int, int> >& arr) {
 }
 
 
-vector<int> rleDriver(vector<int>& data) {
+vector<int> rleDriver(vector<int>& data) { 
 
     vector<pair<int, int> > encoded = rle(data);
     vector<int> decoded = rld(encoded);
