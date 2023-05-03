@@ -14,11 +14,8 @@
 #include <unordered_map>
 #include "snappy-c.h"
 
-int main() {
-  // Open the input file
-  FILE* fp = fopen("./workloadgen/load/workloadScaleFour.txt", "rb");
-  // FILE* fp = fopen("./workloadgen/sortedload/workload_N5000000_K100_L100.txt", "rb");
-  
+int snappyDriver(std::string workloadPath) {
+  FILE* fp = fopen(workloadPath.c_str(), "rb");
   if (!fp) {
     printf("Failed to open input file.\n");
     return 1;
@@ -78,13 +75,6 @@ int main() {
   // Print the size of the compressed data
   printf("Uncompressed size: %zu\n", uncompressed_size);
 
-  // Verify that the uncompressed data is equal to the input data
-  if (uncompressed_size == input_size && memcmp(input_data, uncompressed_data, input_size) == 0) {
-    printf("Compression and decompression successful!\n");
-  } else {
-    printf("Compression and decompression failed!\n");
-  }
-
 
   // Calculate accuracy, precision
     std::vector<int> originalData(input_data, input_data + input_size / sizeof(uint64_t));
@@ -92,19 +82,7 @@ int main() {
     int originalSize = originalData.size();
     int uncompressedSize = uncompressedData.size();
     double compressionRatio = (double)uncompressed_size / (double)compressed_size;
-    double mse = 0.0;
-    for (int i = 0; i < originalSize; ++i) {
-        mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
-    }
-    mse /= (double)originalSize;
-    double psnr;
-    if (mse == 0.0) {
-        psnr = 100.0;
-    } else {
-        psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
-    }
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
-    std::cout << "PSNR: " << psnr << " dB" << std::endl;
 
     int matchedCount = 0;
     for(int i = 0; i < originalSize; ++i) {
