@@ -1,79 +1,105 @@
 /*
- * LZ4 - Fast LZ compression algorithm
- * Header File
- * 
- * Copyright (c) 2010-2013, Yann Collet
- * All rights reserved.
- *
- * BSD license
+ * lz4.h provides block compression functions, returning the size of compressed block
+ * lz4 frame header functions, compressing input into frame format (requires write permissions)
+ * lz4 skippable frame header functions, compressing input into skippable frame format (requires write permissions)
+ * lz4 block maximum size
  */
 
-#ifndef _LZ4_H
-#define _LZ4_H 1
+/* --- Dependency --- */
+#include <stddef.h>   /* size_t */
 
-#if defined (__cplusplus)
-extern "C" {
-#endif
 
-/**************************************
-*  Version
-**************************************/
-#define LZ4_VERSION_MAJOR    1    /* for breaking interface changes  */
-#define LZ4_VERSION_MINOR    9    /* for new (non-breaking) interface capabilities */
-#define LZ4_VERSION_RELEASE  3    /* for tweaks, bug-fixes, or development */
+/* --- Simple Functions --- */
 
-#define LZ4_VERSION_NUMBER (LZ4_VERSION_MAJOR *100*100 + LZ4_VERSION_MINOR *100 + LZ4_VERSION_RELEASE)
-int LZ4_versionNumber (void);
+unsigned LZ4_compress_default(const char* src, char* dst, int srcSize, int dstCapacity);
+int      LZ4_decompress_safe(const char* src, char* dst, int compressedSize, int dstCapacity);
 
-/**************************************
-*  Simple Functions
-**************************************/
+/* --- Advanced Compression Routines --- */
 
-int LZ4_compress(const char* source, char* dest, int sourceSize, int maxDestSize);
-int LZ4_decompress_safe(const char* source, char* dest, int compressedSize, int maxDecompressedSize);
-int LZ4_compressBound(int inputSize);
-
-/**************************************
-*  Advanced Functions
-**************************************/
-
-/* Custom memory allocation functions */
-typedef void* (*LZ4_mallocFunction_t) (size_t);
-typedef void  (*LZ4_freeFunction_t) (void*);
-
-void* LZ4_malloc (size_t);
-void  LZ4_free (void*);
-void LZ4_setMemoryFunctions(LZ4_mallocFunction_t, LZ4_freeFunction_t);
-
-/* Streaming functions */
-
-typedef void* LZ4_stream_t;
-
-int LZ4_sizeofStreamState(void);
-LZ4_stream_t* LZ4_createStream(void);
-int LZ4_resetStream(LZ4_stream_t* streamPtr);
-void LZ4_freeStream(LZ4_stream_t* streamPtr);
-
-/* One-time compression functions */
-int LZ4_compress_limitedOutput(const char* source, char* dest, int sourceSize, int maxOutputSize);
 int LZ4_compress_fast(const char* source, char* dest, int sourceSize, int maxDestSize, int acceleration);
 int LZ4_compress_HC(const char* source, char* dest, int inputSize, int maxDestSize, int compressionLevel);
 
-/* One-time decompression functions */
-int LZ4_decompress_fast(const char* source, char* dest, int originalSize);
-int LZ4_decompress_safe_partial(const char* source, char* dest, int compressedSize, int targetOutputSize, int dstCapacity);
+int LZ4_compressBound(int inputSize);
 
-/* Streaming compression functions */
-int LZ4_compress_continue(LZ4_stream_t* streamPtr, const char* source, char* dest, int inputSize, int maxDestSize);
-int LZ4_compress_limitedOutput_continue(LZ4_stream_t* streamPtr, const char* source, char* dest, int inputSize, int maxDestSize);
-int LZ4_compress_HC_continue(LZ4_stream_t* streamPtr, const char* source, char* dest, int inputSize, int maxDestSize, int compressionLevel);
+/* --- lz4 frame format --- */
 
-/* Streaming decompression functions */
-int LZ4_decompress_safe_continue(LZ4_stream_t* streamPtr, const char* source, char* dest, int compressedSize, int maxOutputSize);
-int LZ4_decompress_fast_continue(LZ4_stream_t* streamPtr, const char* source, char* dest, int originalSize);
+/*
+ * A few definitions first
+ */
 
-#if defined (__cplusplus)
-}
-#endif
+#define LZ4F_VERSION 100
 
-#endif /* _LZ4_H */
+typedef enum {
+    LZ4F_default=0,
+    LZ4F_blockLinked=1,
+    LZ4F_noContentChecksum=4,
+    LZ4F_blockChecksum=8,
+    LZ4F_frameChecksum=16,
+    LZ4F_contentSize=32,
+    LZ4F_contentChecksum=64,
+    LZ4F_dict = 128
+} LZ4FFrameType_t;
+
+typedef struct {
+    unsigned blockSizeID;
+    unsigned blockMode;
+    unsigned contentChecksumFlag;
+    unsigned frameType;
+    size_t contentSize;
+    size_t dictID;
+} LZ4F_frameInfo_t;
+
+typedef struct {
+    size_t  dstCapacity;
+    size_t  maxBlockSize;
+    char*   dst;
+    void*   reserved[4];
+} LZ4F_compressOptions_t;
+
+typedef struct {
+    size_t  dstCapacity;
+    size_t  dictSize;
+    const void* dict;
+    void*   reserved[3];
+} LZ4F_decompressOptions_t;
+
+
+/*
+ * Frame compression functions
+ */
+
+size_t LZ4F_compressFrameBound(size_t srcSize, const LZ4F_compressOptions_t* cOptionsPtr);
+size_t LZ4F_compressFrame(void* dstBuffer, size_t dstCapacity,
+                          const void* srcBuffer, size_t srcSize,
+                          const LZ4F_compressOptions_t* compressOptionsPtr);
+
+/*
+ * Skippable Frame compression functions
+ */
+
+size_t LZ4F_compressBound(size_t srcSize, const LZ4F_compressOptions_t* cOptionsPtr);
+size_t LZ4F_compressBegin(void* dstBuffer, size_t dstCapacity,
+                          const LZ4F_compressOptions_t* compressOptionsPtr);
+size_t LZ4F_compressUpdate(void* dstBuffer, size_t dstCapacity,
+                           const void* srcBuffer, size_t srcSize,
+                           const LZ4F_compressOptions_t* compressOptionsPtr);
+size_t LZ4F_compressEnd(void* dstBuffer, size_t dstCapacity,
+                        const LZ4F_compressOptions_t* compressOptionsPtr);
+
+
+/*
+ * Frame decompression functions
+ */
+
+size_t LZ4F_getFrameInfo(LZ4F_frameInfo_t* frameInfoPtr,
+                         const void* srcBuffer, size_t* srcSizePtr);
+
+size_t LZ4F_decompress(void* dstBuffer, size_t dstCapacity,
+                       const void* srcBuffer, size_t* srcSizePtr,
+                       const LZ4F_decompressOptions_t* decompressOptionsPtr);
+
+/*
+ * Error management
+ */
+
+const char* LZ4F_getErrorName(size_t errorCode);
