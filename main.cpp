@@ -60,6 +60,7 @@ int mainDriver(int selectedAlgo, int selectedTestType, string selectedWorkloadPa
     vector<int> decoded;
 
     if (selectedAlgo == 4) {
+        cout << endl << endl << "Snappy Compression Results: " << endl;
         snappyDriver(selectedWorkloadPath);
     } else {
         originalData = readInputData(selectedWorkloadPath);
@@ -70,16 +71,20 @@ int mainDriver(int selectedAlgo, int selectedTestType, string selectedWorkloadPa
         std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * originalData.size())) << std::endl;
 
         if (selectedAlgo == 1) {
+            cout << endl << endl << "Run Length Encoding Results: " << endl;
             if(selectedTestType == 1 || selectedTestType == 3) {
                 decoded = rleDriver(originalData);
             } else {
                 decoded = rleSequentialDriver(originalData);
             }
         } else if (selectedAlgo == 2) {
+            cout << endl << endl << "Delta Compression Results: " << endl;
             decoded = deltaDriver(originalData);
         } else if (selectedAlgo == 3) {
+            cout << endl << endl << "LZ77 Compression Results: " << endl;
             decoded = lz77Driver(originalData);
         } else if (selectedAlgo == 5) {
+            cout << endl << endl << "ZStandard Compression Results: " << endl;
             decoded = zStandardDriver(originalData);
         }
         calculateMetrics(originalData, decoded);

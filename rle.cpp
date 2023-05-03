@@ -51,10 +51,6 @@ vector<int> rld(vector<pair<int, int> >& arr) {
 
 
 vector<int> rleDriver(vector<int>& data) {
-    std::cout << std::endl << std::endl;
-    std::cout << "Input Data " << std::endl;
-    std::cout << "Length : " << data.size() << std::endl;
-    std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * data.size())) << std::endl;
 
     vector<pair<int, int> > encoded = rle(data);
     vector<int> decoded = rld(encoded);
