@@ -28,31 +28,40 @@ std::vector<int> read_file(const std::string& filename) {
   return data;
 }
 
-std::vector<int> zStandardDriver(std::vector<int>& nums) {
+std::vector<int> zStandardDriver(std::vector<int>& input_data) {
+
+    // Sort input data
+    std::sort(input_data.begin(), input_data.end());
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    std::vector<char> compressed(ZSTD_compressBound(nums.size() * sizeof(int)));
-    size_t compressed_size = ZSTD_compress(compressed.data(), compressed.size(), nums.data(), nums.size() * sizeof(int), ZSTD_maxCLevel());
+    // Compress input data
+    const size_t input_size = input_data.size() * sizeof(int);
+    const size_t max_compressed_size = ZSTD_compressBound(input_size);
+    std::vector<char> compressed_data(max_compressed_size);
+    const size_t compressed_size = ZSTD_compress(compressed_data.data(), max_compressed_size, input_data.data(), input_size, 1);
 
     auto end_time = std::chrono::high_resolution_clock::now();
 
     std::cout << std::endl << std::endl;
     std::cout << "ZStandard Algorithm: " << std::endl;
-    std::cout << "Length : " << compressed_size << std::endl;
+    std::cout << "Length : " << compressed_data.size() << std::endl;
     std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * compressed_size)) << std::endl;
     std::cout << "Time : " << std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count() << " ns" << std::endl;
 
+    std::cout << std::endl;
+
     // Output compression ratio
-    std::cout << "Original size: " << nums.size() * sizeof(int) << std::endl;
+    std::cout << "Original size: " << input_data.size() * sizeof(int) << std::endl;
     std::cout << "Compressed size: " << compressed_size << std::endl;
-    std::cout << "Compression ratio: " << (double)nums.size() * sizeof(int) / compressed_size << std::endl;
+    std::cout << "Compression ratio: " << (double)input_data.size() * sizeof(int) / compressed_size << std::endl;
 
-    // Decompress the compressed data
-    std::vector<int> decompressed(nums.size());
-    size_t decompressed_size = ZSTD_decompress(decompressed.data(), decompressed.size() * sizeof(int), compressed.data(), compressed_size);
 
-    std::vector<int> decoded(decompressed);
+    // Decompress compressed data
+    std::vector<int> decompressed_data(input_data.size());
+    const size_t decompressed_size = ZSTD_decompress(decompressed_data.data(), input_size, compressed_data.data(), compressed_size);
+
+    std::vector<int> decoded(decompressed_data);
     
     return decoded;
 }

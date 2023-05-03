@@ -49,6 +49,7 @@ vector<int> rld(vector<pair<int, int> >& arr) {
     return res;
 }
 
+
 vector<int> rleDriver(vector<int>& data) {
     std::cout << std::endl << std::endl;
     std::cout << "Input Data " << std::endl;
