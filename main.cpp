@@ -60,30 +60,33 @@ int mainDriver(int selectedAlgo, int selectedTestType, string selectedWorkloadPa
     vector<int> decoded;
 
     if (selectedAlgo == 4) {
-            snappyDriver(selectedWorkloadPath);
-        } else {
-            originalData = readInputData(selectedWorkloadPath);
+        snappyDriver(selectedWorkloadPath);
+    } else {
+        originalData = readInputData(selectedWorkloadPath);
 
-            std::cout << std::endl << std::endl;
-            std::cout << "Input Data " << std::endl;
-            std::cout << "Length : " << originalData.size() << std::endl;
-            std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * originalData.size())) << std::endl;
+        std::cout << std::endl << std::endl;
+        std::cout << "Input Data " << std::endl;
+        std::cout << "Length : " << originalData.size() << std::endl;
+        std::cout << "Size : " << (sizeof(std::vector<int>) + (sizeof(int) * originalData.size())) << std::endl;
 
-            if (selectedAlgo == 1) {
-                if(selectedTestType == 1 || selectedTestType == 3) {
-                    decoded = rleDriver(originalData);
-                } else {
-                    decoded = rleSequentialDriver(originalData);
-                }
-            } else if (selectedAlgo == 2) {
-                decoded = deltaDriver(originalData);
-            } else if (selectedAlgo == 3) {
-                decoded = lz77Driver(originalData);
-            } else if (selectedAlgo == 5) {
-                decoded = zStandardDriver(originalData);
+        if (selectedAlgo == 1) {
+            if(selectedTestType == 1 || selectedTestType == 3) {
+                decoded = rleDriver(originalData);
+            } else {
+                decoded = rleSequentialDriver(originalData);
             }
-            calculateMetrics(originalData, decoded);
+        } else if (selectedAlgo == 2) {
+            decoded = deltaDriver(originalData);
+        } else if (selectedAlgo == 3) {
+            decoded = lz77Driver(originalData);
+        } else if (selectedAlgo == 5) {
+            decoded = zStandardDriver(originalData);
         }
+        calculateMetrics(originalData, decoded);
+
+        return 0;
+    } 
+    return 1;
 
 }
 

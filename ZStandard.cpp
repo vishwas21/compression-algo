@@ -28,7 +28,7 @@ std::vector<int> read_file(const std::string& filename) {
   return data;
 }
 
-std::vector<int>& zStandardDriver(std::vector<int>& nums) {
+std::vector<int> zStandardDriver(std::vector<int>& nums) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -52,5 +52,7 @@ std::vector<int>& zStandardDriver(std::vector<int>& nums) {
     std::vector<int> decompressed(nums.size());
     size_t decompressed_size = ZSTD_decompress(decompressed.data(), decompressed.size() * sizeof(int), compressed.data(), compressed_size);
 
-    return decompressed;
+    std::vector<int> decoded(decompressed);
+    
+    return decoded;
 }

@@ -67,7 +67,7 @@ vector<int> lz77_decompress(const vector<Triple>& input) {
     return output;
 }
 
-vector<int>& lz77Driver(vector<int>& input) {
+vector<int> lz77Driver(vector<int>& input) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
     vector<Triple> compressed = lz77_compress(input);
@@ -75,10 +75,11 @@ vector<int>& lz77Driver(vector<int>& input) {
 
     std::cout << "Time : " << std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count() << " ns" << std::endl;
 
-    vector<int> decompressed = lz77_decompress(compressed);
+    vector<int> decompressed(lz77_decompress(compressed));
 
     double compressionRatio = (double)decompressed.size() / (double)compressed.size();
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
+
 
     return decompressed;
 }
