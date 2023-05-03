@@ -77,7 +77,7 @@ vector<int> lz77Driver(vector<int>& input) {
 
     vector<int> decompressed(lz77_decompress(compressed));
 
-    double compressionRatio = (double)decompressed.size() / (double)compressed.size();
+    double compressionRatio =  ((double)compressed.size() / (double)input.size()) * 100;
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
 
 

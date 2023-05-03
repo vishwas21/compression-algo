@@ -55,7 +55,7 @@ vector<int> rleDriver(vector<int>& data) {
     vector<pair<int, int> > encoded = rle(data);
     vector<int> decoded = rld(encoded);
 
-    double compressionRatio = (double)data.size() / (double)encoded.size();
+    double compressionRatio =  ((double)encoded.size() / (double)data.size()) * 100;
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
 
     return decoded;
