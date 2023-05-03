@@ -27,3 +27,7 @@ Snappy
 LZ4
 
 -   clang++ -std=c++11 -stdlib=libc++ -I/usr/local/include -L/opt/homebrew/lib/ -o lz4 lz4.cpp -llz4 && ./lz4
+
+Main
+
+-   clang++ -std=c++11 -stdlib=libc++ -I/usr/local/include -L/opt/homebrew/lib/ -o main main.cpp -lzstd -lsnappy
