@@ -28,47 +28,7 @@ std::vector<int> read_file(const std::string& filename) {
   return data;
 }
 
-void calculateMetrics(std::vector<int>& originalData, std::vector<int>& uncompressedData) {
-    int originalSize = originalData.size();
-    int uncompressedSize = uncompressedData.size();
-    double mse = 0.0;
-    for (int i = 0; i < originalSize; ++i) {
-        mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
-    }
-    mse /= (double)originalSize;
-    // double psnr;
-    // if (mse == 0.0) {
-    //     psnr = 100.0;
-    // } else {
-    //     psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
-    // }
-    // std::cout << "PSNR: " << psnr << " dB" << std::endl;
-
-    int matchedCount = 0;
-    for(int i = 0; i < originalSize; ++i) {
-        if(originalData[i] == uncompressedData[i]) {
-            matchedCount ++;
-        }
-    }
-
-    double accuracy = ((double)matchedCount / originalSize) * 100;
-    std::cout << "Accuracy : " << accuracy << "%" << std::endl;
-}
-
-int main() {
-    // Example vector of integers
-    const std::string input_file = "./workloadgen/load/workloadScaleFour.txt";
-    // const std::string input_file = "./workloadgen/sortedload/workload_N5000000_K100_L100.txt";
-
-    std::ifstream infile(input_file);
-    std::vector<int> nums;
-
-    int num;
-    while (infile >> num) {
-        nums.push_back(num);
-    }
-
-    infile.close();
+std::vector<int> zStandardDriver(std::vector<int>& nums) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -92,5 +52,7 @@ int main() {
     std::vector<int> decompressed(nums.size());
     size_t decompressed_size = ZSTD_decompress(decompressed.data(), decompressed.size() * sizeof(int), compressed.data(), compressed_size);
 
-    calculateMetrics(nums, decompressed);
+    std::vector<int> decoded(decompressed);
+    
+    return decoded;
 }

@@ -16,12 +16,6 @@ struct Triple {
     Triple() {}
 };
 
-// void print(std::vector <int> const &a) {
-//    for(int i=5890; i < 6234; i++)
-//    std::cout << a.at(i) << ' ';
-// }
-
-
 vector<Triple> lz77_compress(const vector<int>& input) {
     vector<Triple> output;
     int inputLength = input.size();
@@ -73,53 +67,7 @@ vector<int> lz77_decompress(const vector<Triple>& input) {
     return output;
 }
 
-// Function to calculate accuracy, precision, and recall of RLE
-void calculateMetrics(std::vector<int>& originalData, std::vector<int>& uncompressedData) {
-    int originalSize = originalData.size();
-    int uncompressedSize = uncompressedData.size();
-    double mse = 0.0;
-    for (int i = 0; i < originalSize; ++i) {
-        mse += std::pow((double)originalData[i] - (double)uncompressedData[i], 2.0);
-    }
-    mse /= (double)originalSize;
-    double psnr;
-    if (mse == 0.0) {
-        psnr = 100.0;
-    } else {
-        psnr = 20.0 * std::log10(255.0 / std::sqrt(mse));
-    }
-    std::cout << "PSNR: " << psnr << " dB" << std::endl;
-
-    int matchedCount = 0;
-    for(int i = 0; i < originalSize; ++i) {
-        if(originalData[i] == uncompressedData[i]) {
-            matchedCount ++;
-        }
-    }
-
-    double accuracy = ((double)matchedCount / originalSize) * 100;
-    std::cout << "Accuracy : " << accuracy << "%" << std::endl;
-}
-
-int main() {
-    string line;
-    vector<int> input;
-    ifstream file("workloadgen/load/workloadScaleFour.txt");
-    if (file.is_open()) {
-        while (getline(file, line)) {
-            istringstream iss(line);
-            int num;
-            while (iss >> num) {
-                input.push_back(num);
-            }
-        }
-        file.close();
-    } else {
-        cout << "Unable to open file" << endl;
-        return 1;
-    }
-
-    std::cout << "File Read successfull" << std::endl;
+vector<int> lz77Driver(vector<int>& input) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
     vector<Triple> compressed = lz77_compress(input);
@@ -127,16 +75,11 @@ int main() {
 
     std::cout << "Time : " << std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count() << " ns" << std::endl;
 
-    std::cout << "File Compress successfull" << std::endl;
-
-    vector<int> decompressed = lz77_decompress(compressed);
-
-    std::cout << "File Decompress successfull" << std::endl;
+    vector<int> decompressed(lz77_decompress(compressed));
 
     double compressionRatio = (double)decompressed.size() / (double)compressed.size();
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
 
-    calculateMetrics(input, decompressed);
 
-    return 0;
+    return decompressed;
 }
