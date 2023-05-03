@@ -37,7 +37,7 @@ std::vector<int>& deltaDriver(std::vector<int>& data) {
 
     // Compress the data
     delta_compress(data);
-    double compressionRatio = (double)original.size() / (double)data.size();
+    double compressionRatio =  ((double)data.size() / (double)original.size()) * 100;
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
 
     // Decompress the data
