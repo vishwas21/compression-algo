@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
     klWorkloadPath[1] = "./workloadgen/sortedload/workload_N5000000_K100_L1.txt";
     klWorkloadPath[2] = "./workloadgen/sortedload/workload_N5000000_K50_L1.txt";
     klWorkloadPath[3] = "./workloadgen/sortedload/workload_N5000000_K25_L1.txt";
-    klWorkloadPath[4] = "./workloadgen/sortedload/workload_N5000000_K10_L1.txt";
+    klWorkloadPath[4] = "./workloaydgen/sortedload/workload_N5000000_K10_L1.txt";
     klWorkloadPath[5] = "./workloadgen/sortedload/workload_N5000000_K5_L1.txt";
     klWorkloadPath[6] = "./workloadgen/sortedload/workload_N5000000_K1_L1.txt";
     klWorkloadPath[7] = "./workloadgen/sortedload/workload_N5000000_K0_L0.txt";

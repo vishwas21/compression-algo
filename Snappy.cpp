@@ -81,7 +81,7 @@ int snappyDriver(std::string workloadPath) {
     std::vector<int> uncompressedData(uncompressed_data, uncompressed_data + uncompressed_size / sizeof(uint64_t));
     int originalSize = originalData.size();
     int uncompressedSize = uncompressedData.size();
-    double compressionRatio = (double)uncompressed_size / (double)compressed_size;
+    double compressionRatio = ((double)compressed_size / (double)input_size) * 100;
     std::cout << "Compression ratio: " << compressionRatio << std::endl;
 
     int matchedCount = 0;
