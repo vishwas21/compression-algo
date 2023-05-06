@@ -54,7 +54,11 @@ std::vector<int> zStandardDriver(std::vector<int>& input_data) {
     // Output compression ratio
     std::cout << "Original size: " << input_data.size() * sizeof(int) << std::endl;
     std::cout << "Compressed size: " << compressed_size << std::endl;
+<<<<<<< Updated upstream
     std::cout << "Compression ratio: " << (double)input_data.size() * sizeof(int) / compressed_size << std::endl;
+=======
+    std::cout << "Compression ratio: " << (compressed_size / (double)input_size) * 100 << std::endl;
+>>>>>>> Stashed changes
 
 
     // Decompress compressed data
